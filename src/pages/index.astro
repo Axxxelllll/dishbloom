@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
 import CategoryBar from '../components/CategoryBar.astro';
+import AdSlot from '../components/AdSlot.astro';
 
 import { env } from "cloudflare:workers";
 const db = env.DB;
@@ -24,6 +25,8 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
       </div>
     </div>
   </section>
+
+  <AdSlot id="ad-below-hero" size="leaderboard" />
 
   <section class="section">
     <div class="container">
@@ -57,6 +60,8 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
     </div>
   </section>
 
+  <AdSlot id="ad-mid-feed" size="leaderboard" />
+
   <section class="dotw-section">
     <div class="container">
       <div class="dotw-card">
@@ -79,6 +84,8 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
     </div>
   </section>
 
+  <AdSlot id="ad-before-poll" size="rectangle" />
+
   <section class="section">
     <div class="container">
       <div class="poll-card">
@@ -92,6 +99,8 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
       </div>
     </div>
   </section>
+
+  <AdSlot id="ad-before-footer" size="leaderboard" />
 
   <footer class="footer">
     <div class="container footer-inner">
@@ -107,6 +116,7 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
     </div>
     <div class="footer-bottom container">2026 DishBloom. Made with love and good food.</div>
   </footer>
+  <AdSlot id="ad-mobile-sticky" size="sticky" />
 </Base>
 
 <style>

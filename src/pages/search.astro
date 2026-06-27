@@ -2,6 +2,7 @@
 export const prerender = false;
 import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
 import { env } from "cloudflare:workers";
 
 const db = env.DB;
@@ -62,6 +63,8 @@ if (q.trim()) {
       <p>Try searching for something else like "chicken", "pasta", or "vegan"</p>
     </div>
   )}
+  <AdSlot id="ad-search-bottom" size="leaderboard" />
+  <AdSlot id="ad-search-sticky" size="sticky" />
 </Base>
 
 <style>

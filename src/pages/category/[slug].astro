@@ -3,6 +3,7 @@ export const prerender = false;
 import Base from '../../layouts/Base.astro';
 import Navbar from '../../components/Navbar.astro';
 import CategoryBar from '../../components/CategoryBar.astro';
+import AdSlot from '../../components/AdSlot.astro';
 import { env } from "cloudflare:workers";
 
 const { slug } = Astro.params;
@@ -37,6 +38,8 @@ const { results: recipes } = await db.prepare(
     </div>
   </section>
 
+  <AdSlot id="ad-category-top" size="leaderboard" />
+
   <div class="masonry">
     {recipes.map(r => {
       const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
@@ -69,6 +72,8 @@ const { results: recipes } = await db.prepare(
       <a href="/" class="back-btn">&larr; Browse all recipes</a>
     </div>
   )}
+  <AdSlot id="ad-category-bottom" size="leaderboard" />
+  <AdSlot id="ad-category-sticky" size="sticky" />
 </Base>
 
 <style>
