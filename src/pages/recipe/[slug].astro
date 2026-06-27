@@ -4,7 +4,8 @@ import Base from '../../layouts/Base.astro';
 import Navbar from '../../components/Navbar.astro';
 
 const { slug } = Astro.params;
-const db = Astro.locals.runtime.env.DB;
+import { env } from "cloudflare:workers";
+const db = env.DB;
 
 const recipe = await db.prepare("SELECT * FROM recipes WHERE slug = ?").bind(slug).first();
 if (!recipe) return Astro.redirect("/404");

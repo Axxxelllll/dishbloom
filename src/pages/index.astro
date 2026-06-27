@@ -3,7 +3,8 @@ import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
 import CategoryBar from '../components/CategoryBar.astro';
 
-const db = Astro.locals.runtime.env.DB;
+import { env } from "cloudflare:workers";
+const db = env.DB;
 const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY id DESC LIMIT 40").all();
 ---
 <Base>
