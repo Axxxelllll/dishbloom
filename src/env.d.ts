@@ -1,11 +1,8 @@
 /// <reference types="astro/client" />
 
-type D1Database = import('@cloudflare/workers-types').D1Database;
-type R2Bucket = import('@cloudflare/workers-types').R2Bucket;
-
 type Runtime = import('@astrojs/cloudflare').Runtime<{
-  DB: D1Database;
-  IMAGES: R2Bucket;
+  DB: import('@cloudflare/workers-types').D1Database;
+  BUCKET: import('@cloudflare/workers-types').R2Bucket;
 }>;
 
 declare namespace App {

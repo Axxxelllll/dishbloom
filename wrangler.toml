@@ -8,5 +8,5 @@ database_name = "dishbloom-db"
 database_id = "f0be6ee0-20f2-4e3e-a71f-d93c788179f8"
 
 [[r2_buckets]]
-binding = "IMAGES"
+binding = "BUCKET"
 bucket_name = "dishbloom-images"
