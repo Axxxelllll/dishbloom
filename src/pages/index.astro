@@ -5,7 +5,7 @@ import CategoryBar from '../components/CategoryBar.astro';
 
 import { env } from "cloudflare:workers";
 const db = env.DB;
-const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY id DESC LIMIT 40").all();
+const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, id DESC LIMIT 40").all();
 ---
 <Base>
   <Navbar />
