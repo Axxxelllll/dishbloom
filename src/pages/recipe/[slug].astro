@@ -100,7 +100,7 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
               </label>
             ))}
           </div>
-          </Fragment>
+          
         ))}
       </section>
 
@@ -108,9 +108,9 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
 
       <section class="steps-section" id="recipe-steps">
         <h2>Instructions</h2>
-        {steps.map((step: any, idx: number) => (
-          <Fragment>
-          {idx > 0 && idx % 3 === 0 && <AdSlot id={"ad-step-" + idx} size="rectangle" />}
+        {steps.flatMap((step: any, idx: number) => [
+          idx > 0 && idx % 3 === 0 && <AdSlot id={"ad-step-" + idx} size="rectangle" />,
+          (
           <div class="step-card">
             <div class="step-num">{idx + 1}</div>
             <div class="step-content">
@@ -123,7 +123,7 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
               )}
             </div>
           </div>
-        ))}
+        )]).filter(Boolean)}
       </section>
 
       {substitutions.length > 0 && (
