@@ -1,0 +1,82 @@
+---
+export const prerender = false;
+import Base from '../../layouts/Base.astro';
+import Navbar from '../../components/Navbar.astro';
+import CategoryBar from '../../components/CategoryBar.astro';
+import { env } from "cloudflare:workers";
+
+const { slug } = Astro.params;
+const db = env.DB;
+
+const categoryNames = {
+  "vegan": "Vegan", "keto": "Keto", "high-protein": "High Protein",
+  "5-ingredient": "5 Ingredients", "15-min": "15 Minutes", "one-pot": "One Pot",
+  "meal-prep": "Meal Prep", "comfort": "Comfort Food", "budget": "Broke Friendly",
+  "date-night": "Date Night", "midnight": "Midnight Snack", "hangover": "Hangover Cure",
+  "brain-food": "Brain Food", "post-workout": "Post Workout", "solo": "Cooking for One",
+  "kids": "Kid Friendly", "diabetic": "Diabetic", "gluten-free": "Gluten Free",
+  "no-cook": "No Cook", "quick": "Quick", "dessert": "Dessert",
+  "heart-healthy": "Heart Healthy", "anti-inflammatory": "Anti-Inflammatory",
+  "pcos": "PCOS Friendly", "pregnancy": "Pregnancy Safe",
+};
+
+const title = categoryNames[slug] || slug.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+
+const { results: recipes } = await db.prepare(
+  "SELECT * FROM recipes WHERE category = ? OR dietary LIKE ? ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, id DESC LIMIT 60"
+).bind(slug, "%" + slug + "%").all();
+---
+<Base title={title + " Recipes | DishBloom"}>
+  <Navbar />
+  <CategoryBar />
+
+  <section class="cat-hero">
+    <div class="container">
+      <h1 class="cat-title">{title} Recipes</h1>
+      <p class="cat-count">{recipes.length} recipes</p>
+    </div>
+  </section>
+
+  <div class="masonry">
+    {recipes.map(r => {
+      const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+      const dietaryArr = (() => { try { return JSON.parse(r.dietary || "[]"); } catch(e) { return []; } })();
+      const tag = dietaryArr[0] || r.category || "";
+      return (
+        <a href={"/recipe/" + r.slug} class="recipe-card">
+          <img src={img} alt={r.title} loading="lazy" />
+          <button class="save-btn" aria-label="Save">&#9829;</button>
+          <div class="card-body">
+            <div class="card-title">{r.title}</div>
+            <div class="card-meta">
+              <span>&#9733; {r.avg_rating || "4.5"}</span>
+              <span class="dot">&middot;</span>
+              <span>{r.total_time} min</span>
+              <span class="dot">&middot;</span>
+              <span>{r.calories} cal</span>
+            </div>
+            {tag && <div style="margin-top:8px"><span class="pill">{tag}</span></div>}
+          </div>
+        </a>
+      );
+    })}
+  </div>
+
+  {recipes.length === 0 && (
+    <div class="empty-state">
+      <h2>No recipes yet</h2>
+      <p>We are cooking up {title.toLowerCase()} recipes. Check back soon!</p>
+      <a href="/" class="back-btn">&larr; Browse all recipes</a>
+    </div>
+  )}
+</Base>
+
+<style>
+.cat-hero { text-align: center; padding: 40px 0 24px; }
+.cat-title { font-size: clamp(1.8rem, 4vw, 2.8rem); margin-bottom: 6px; }
+.cat-count { color: var(--text-light); font-size: 0.95rem; }
+.empty-state { text-align: center; padding: 80px 20px; }
+.empty-state h2 { font-size: 1.6rem; margin-bottom: 8px; }
+.empty-state p { color: var(--text-light); margin-bottom: 20px; }
+.back-btn { display: inline-block; padding: 10px 24px; border-radius: 100px; background: var(--gold); color: white; font-weight: 600; }
+</style>

@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+---
+<Base title="About | DishBloom">
+  <Navbar />
+  <article class="about-page container">
+    <h1>About DishBloom</h1>
+    <p class="about-lead">We believe cooking should be visual, inspiring, and accessible to everyone.</p>
+    <p>DishBloom is a visual food discovery platform — think Pinterest meets your favorite recipe site. We combine stunning food photography with detailed, tested recipes so you can find your next meal in seconds.</p>
+    <p>Every recipe features interactive ingredient checklists, adjustable servings, built-in timers, ingredient substitutions, and common mistakes to avoid. No endless life stories before the recipe — just beautiful food and clear instructions.</p>
+    <h2>Our mission</h2>
+    <p>To make discovering and cooking great food as enjoyable as eating it. Whether you are a complete beginner or a seasoned home chef, DishBloom helps you cook with confidence.</p>
+    <h2>Community</h2>
+    <p>DishBloom is built for sharing. Save recipes to your collections, upload your "I made this" photos, join weekly cooking challenges, and vote on the dish of the week. Every recipe you share makes the community stronger.</p>
+  </article>
+</Base>
+
+<style>
+.about-page { max-width: 700px; padding: 48px 20px 80px; }
+.about-page h1 { font-size: 2rem; margin-bottom: 12px; }
+.about-page h2 { font-size: 1.3rem; margin-top: 28px; margin-bottom: 8px; }
+.about-page p { color: var(--text-light); line-height: 1.7; margin-bottom: 12px; }
+.about-lead { font-size: 1.15rem; color: var(--text); font-weight: 500; }
+</style>

@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+---
+<Base title="Not Found | DishBloom">
+  <Navbar />
+  <section class="not-found">
+    <h1>404</h1>
+    <p>This recipe got lost in the kitchen</p>
+    <a href="/" class="home-btn">Back to recipes &rarr;</a>
+  </section>
+</Base>
+
+<style>
+.not-found { text-align: center; padding: 120px 20px; }
+.not-found h1 { font-size: 5rem; color: var(--gold); margin-bottom: 8px; }
+.not-found p { font-size: 1.2rem; color: var(--text-light); margin-bottom: 24px; }
+.home-btn { display: inline-block; padding: 12px 28px; border-radius: 100px; background: var(--gold); color: white; font-weight: 600; }
+</style>

@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+---
+<Base title="Terms of Use | DishBloom">
+  <Navbar />
+  <article class="legal-page container">
+    <h1>Terms of Use</h1>
+    <p class="updated">Last updated: June 28, 2026</p>
+    <p>By using DishBloom (thedishbloom.com), you agree to these terms. If you do not agree, please do not use the service.</p>
+    <h2>Use of service</h2>
+    <p>DishBloom provides a recipe discovery platform. You may browse, save, and share recipes for personal, non-commercial use. You must not scrape, copy, or redistribute our content without permission.</p>
+    <h2>User content</h2>
+    <p>When you submit recipes, photos, or reviews, you grant DishBloom a non-exclusive, worldwide license to display, distribute, and promote your content on our platform. You retain ownership of your content.</p>
+    <h2>Accuracy</h2>
+    <p>Recipes are provided for informational purposes. We do not guarantee nutritional accuracy. Always verify allergen information independently. Cook food to safe internal temperatures.</p>
+    <h2>Advertising</h2>
+    <p>DishBloom displays third-party advertisements. We are not responsible for the content of third-party ads or the products and services they promote.</p>
+    <h2>Contact</h2>
+    <p>Questions about these terms? Email hello@thedishbloom.com.</p>
+  </article>
+</Base>
+
+<style>
+.legal-page { max-width: 700px; padding: 48px 20px 80px; }
+.legal-page h1 { font-size: 2rem; margin-bottom: 8px; }
+.legal-page h2 { font-size: 1.3rem; margin-top: 28px; margin-bottom: 8px; }
+.legal-page p { color: var(--text-light); line-height: 1.7; margin-bottom: 12px; }
+.updated { font-size: 0.85rem; color: var(--text-lighter); margin-bottom: 24px; }
+</style>

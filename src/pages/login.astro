@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+---
+<Base title="Log in | DishBloom">
+  <Navbar />
+  <section class="auth-page">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <p class="auth-sub">Log in to save recipes and join the community</p>
+      <div class="auth-form">
+        <input type="email" placeholder="Email address" class="auth-input" />
+        <input type="password" placeholder="Password" class="auth-input" />
+        <button class="auth-btn">Log in</button>
+      </div>
+      <p class="auth-switch">New here? <a href="/signup">Create an account</a></p>
+    </div>
+  </section>
+</Base>
+
+<style>
+.auth-page { display: flex; justify-content: center; padding: 60px 20px; }
+.auth-card { width: 100%; max-width: 400px; background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 40px 32px; text-align: center; }
+.auth-card h1 { font-size: 1.8rem; margin-bottom: 8px; }
+.auth-sub { color: var(--text-light); margin-bottom: 28px; font-size: 0.95rem; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-input { padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.95rem; outline: none; }
+.auth-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-light); }
+.auth-btn { padding: 14px; border-radius: var(--radius); border: none; background: var(--gold); color: white; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 4px; }
+.auth-btn:hover { background: var(--gold-dark); }
+.auth-switch { margin-top: 20px; font-size: 0.88rem; color: var(--text-light); }
+.auth-switch a { color: var(--gold-dark); font-weight: 600; }
+</style>

@@ -17,7 +17,7 @@ async function generateImage(title) {
     },
     body: JSON.stringify({
       model: "gpt-image-1",
-      prompt: "Hyper-colorful, vibrant, unrealistic food photography of " + title + ". Extremely saturated colors, dreamy pastel background, glowing neon food highlights, studio lighting, top-down angle, clean white plate, magical food art style. No text, no watermarks.",
+      prompt: "Beautiful professional food photography of " + title + ". Vibrant saturated colors, fresh ingredients, warm natural lighting, shallow depth of field, clean white marble surface, overhead 45-degree angle, restaurant quality plating, colorful garnishes, steam rising. Real food, photorealistic, editorial style like Bon Appetit magazine. No text, no watermarks.",
       n: 1,
       size: "1024x1024",
       quality: "medium",
@@ -33,7 +33,7 @@ async function uploadToR2(slug, base64) {
   const tmpFile = "tmp_img_" + slug + ".png";
   fs.writeFileSync(tmpFile, buf);
   try {
-    execSync("npx wrangler r2 object put dishbloom-images/ --remote " + slug + ".png --file=" + tmpFile + " --content-type=image/png", { stdio: "pipe" });
+    execSync("npx wrangler r2 object put dishbloom-images/" + slug + ".png --file=" + tmpFile + " --content-type=image/png --remote", { stdio: "pipe" });
   } catch(e) {
     console.log("  R2 upload failed");
     return false;
