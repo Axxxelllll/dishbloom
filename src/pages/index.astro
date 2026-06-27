@@ -1,0 +1,150 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import CategoryBar from '../components/CategoryBar.astro';
+
+const db = Astro.locals.runtime.env.DB;
+const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY id DESC LIMIT 40").all();
+---
+<Base>
+  <Navbar />
+  <CategoryBar />
+  
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero-title">Discover food that makes you <span class="gold-underline">bloom</span></h1>
+      <p class="hero-sub">Browse thousands of stunning recipes. Save your favorites. Cook with confidence.</p>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">{recipes.length}+</span> recipes</div>
+        <div class="stat-dot"></div>
+        <div class="stat"><span class="stat-num">50+</span> cuisines</div>
+        <div class="stat-dot"></div>
+        <div class="stat"><span class="stat-num">12K</span> home cooks</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Trending now</h2>
+      </div>
+    </div>
+    <div class="masonry">
+      {recipes.map(r => {
+        const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+        const dietaryArr = (() => { try { return JSON.parse(r.dietary || "[]"); } catch(e) { return []; } })();
+        const tag = dietaryArr[0] || r.category || r.cuisine || "";
+        return (
+          <a href={"/recipe/" + r.slug} class="recipe-card">
+            <img src={img} alt={r.title} loading="lazy" />
+            <button class="save-btn" aria-label="Save">&#9829;</button>
+            <div class="card-body">
+              <div class="card-title">{r.title}</div>
+              <div class="card-meta">
+                <span>&#9733; {r.avg_rating || "4.5"}</span>
+                <span class="dot">&middot;</span>
+                <span>{r.total_time} min</span>
+                <span class="dot">&middot;</span>
+                <span>{r.calories} cal</span>
+              </div>
+              {tag && <div style="margin-top:8px"><span class="pill">{tag}</span></div>}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="dotw-section">
+    <div class="container">
+      <div class="dotw-card">
+        <div class="dotw-badge">Dish of the week</div>
+        <h2 class="dotw-title">{recipes[0]?.title || "Coming soon"}</h2>
+        <p class="dotw-desc">Voted by home cooks as this week's must-try recipe.</p>
+        <a href={"/recipe/" + (recipes[0]?.slug || "#")} class="dotw-btn">View recipe &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="challenge-card">
+        <div class="challenge-label">Weekly challenge</div>
+        <h2 class="challenge-title">Under $2 Dinner Challenge</h2>
+        <p class="challenge-desc">Can you make a delicious dinner for under $2? Show us what you got. 47 entries so far!</p>
+        <a href="#" class="challenge-btn">Join challenge &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="poll-card">
+        <div class="poll-label">Daily poll</div>
+        <h3 class="poll-q">Butter vs Olive Oil - which rules your kitchen?</h3>
+        <div class="poll-options">
+          <button class="poll-opt">Butter<span class="poll-pct">62%</span></button>
+          <button class="poll-opt">Olive Oil<span class="poll-pct">38%</span></button>
+        </div>
+        <p class="poll-count">1,247 votes</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-text">dish<span class="logo-gold">bloom</span></span>
+        <p class="footer-tagline">Discover food that makes you bloom.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col"><h4>Discover</h4><a href="#">Trending</a><a href="#">New recipes</a><a href="#">Collections</a><a href="#">Challenges</a></div>
+        <div class="footer-col"><h4>Dietary</h4><a href="/category/vegan">Vegan</a><a href="/category/keto">Keto</a><a href="/category/diabetic">Diabetic</a><a href="/category/high-protein">High Protein</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom container">2026 DishBloom. Made with love and good food.</div>
+  </footer>
+</Base>
+
+<style>
+.hero { text-align: center; padding: 48px 0 32px; }
+.hero-title { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: 12px; }
+.hero-sub { color: var(--text-light); font-size: 1.05rem; max-width: 500px; margin: 0 auto 20px; }
+.hero-stats { display: flex; justify-content: center; align-items: center; gap: 16px; font-size: 0.9rem; color: var(--text-light); }
+.stat-num { font-weight: 700; color: var(--text); }
+.stat-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+.section { padding: 40px 0; }
+.section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+.section-header h2 { font-size: 1.6rem; }
+.dotw-section { padding: 20px 0 40px; }
+.dotw-card { background: linear-gradient(135deg, #FFF8ED 0%, #FFF3DB 100%); border: 1px solid var(--gold-light); border-radius: 16px; padding: 32px; text-align: center; }
+.dotw-badge { display: inline-block; background: var(--gold); color: white; padding: 4px 16px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.dotw-title { font-size: 1.8rem; margin-bottom: 8px; }
+.dotw-desc { color: var(--text-light); margin-bottom: 12px; }
+.dotw-btn { display: inline-block; background: var(--gold); color: white; padding: 10px 28px; border-radius: 100px; font-weight: 600; font-size: 0.9rem; }
+.challenge-card { background: linear-gradient(135deg, #F0FAF4 0%, #E0F5E9 100%); border: 1px solid #C5E8D3; border-radius: 16px; padding: 32px; text-align: center; }
+.challenge-label { display: inline-block; background: var(--green); color: white; padding: 4px 16px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.challenge-title { font-size: 1.5rem; margin-bottom: 8px; }
+.challenge-desc { color: var(--text-light); margin-bottom: 16px; max-width: 500px; margin-left: auto; margin-right: auto; }
+.challenge-btn { display: inline-block; background: var(--green); color: white; padding: 10px 28px; border-radius: 100px; font-weight: 600; font-size: 0.9rem; }
+.poll-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 28px; text-align: center; max-width: 480px; margin: 0 auto; }
+.poll-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold-dark); margin-bottom: 10px; }
+.poll-q { font-size: 1.2rem; margin-bottom: 16px; font-family: 'Instrument Serif', serif; }
+.poll-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.poll-opt { display: flex; justify-content: space-between; padding: 12px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); font-size: 0.95rem; font-weight: 500; transition: all 0.2s; }
+.poll-opt:hover { border-color: var(--gold); background: var(--gold-light); }
+.poll-pct { color: var(--gold-dark); font-weight: 700; }
+.poll-count { font-size: 0.8rem; color: var(--text-lighter); }
+.footer { margin-top: 60px; padding: 48px 0 24px; border-top: 1px solid var(--border); background: var(--white); }
+.footer-inner { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; margin-bottom: 32px; }
+.footer-tagline { color: var(--text-light); font-size: 0.85rem; margin-top: 8px; }
+.footer-links { display: flex; gap: 48px; }
+.footer-col { display: flex; flex-direction: column; gap: 8px; }
+.footer-col h4 { font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-lighter); margin-bottom: 4px; }
+.footer-col a { font-size: 0.88rem; color: var(--text-light); }
+.footer-col a:hover { color: var(--gold-dark); }
+.footer-bottom { font-size: 0.8rem; color: var(--text-lighter); padding-top: 20px; border-top: 1px solid var(--border-light); }
+@media (max-width: 640px) { .footer-links { gap: 32px; } }
+</style>

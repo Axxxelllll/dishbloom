@@ -1,0 +1,78 @@
+---
+const categories = [
+  { name: 'All', slug: '', icon: '&#x2728;' },
+  { name: 'Vegan', slug: 'vegan', icon: '&#x1F331;' },
+  { name: 'Keto', slug: 'keto', icon: '&#x1F951;' },
+  { name: 'High Protein', slug: 'high-protein', icon: '&#x1F4AA;' },
+  { name: '5 Ingredients', slug: '5-ingredient', icon: '&#x270B;' },
+  { name: '15 Min', slug: '15-min', icon: '&#x23F1;' },
+  { name: 'One Pot', slug: 'one-pot', icon: '&#x1F372;' },
+  { name: 'Meal Prep', slug: 'meal-prep', icon: '&#x1F4E6;' },
+  { name: 'Comfort Food', slug: 'comfort', icon: '&#x1F60C;' },
+  { name: 'Broke Friendly', slug: 'budget', icon: '&#x1F4B0;' },
+  { name: 'Date Night', slug: 'date-night', icon: '&#x1F495;' },
+  { name: 'Midnight Snack', slug: 'midnight', icon: '&#x1F319;' },
+  { name: 'Hangover Cure', slug: 'hangover', icon: '&#x1F605;' },
+  { name: 'Brain Food', slug: 'brain-food', icon: '&#x1F9E0;' },
+  { name: 'Post Workout', slug: 'post-workout', icon: '&#x1F3CB;' },
+  { name: 'Cooking for One', slug: 'solo', icon: '&#x1F9D1;&#x200D;&#x1F373;' },
+  { name: 'Kid Friendly', slug: 'kids', icon: '&#x1F476;' },
+  { name: 'Diabetic', slug: 'diabetic', icon: '&#x1F49A;' },
+  { name: 'Gluten Free', slug: 'gluten-free', icon: '&#x1F33E;' },
+  { name: 'No Cook', slug: 'no-cook', icon: '&#x2744;' },
+];
+---
+<div class="category-bar-wrap">
+  <div class="category-bar">
+    {categories.map(cat => (
+      <a href={cat.slug ? "/category/" + cat.slug : "/"} class={"cat-chip" + (!cat.slug ? " active" : "")}>
+        <span class="cat-icon" set:html={cat.icon} />
+        <span class="cat-name">{cat.name}</span>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+.category-bar-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--white);
+}
+.category-bar-wrap::-webkit-scrollbar { display: none; }
+.category-bar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  white-space: nowrap;
+}
+.cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-light);
+  background: var(--bg);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.cat-chip:hover {
+  border-color: var(--gold);
+  color: var(--gold-dark);
+  background: var(--gold-light);
+}
+.cat-chip.active {
+  background: var(--gold);
+  color: white;
+  border-color: var(--gold);
+}
+.cat-icon { font-size: 1rem; line-height: 1; }
+</style>

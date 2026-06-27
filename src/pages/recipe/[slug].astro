@@ -1,0 +1,283 @@
+---
+export const prerender = false;
+import Base from '../../layouts/Base.astro';
+import Navbar from '../../components/Navbar.astro';
+
+const { slug } = Astro.params;
+const db = Astro.locals.runtime.env.DB;
+
+const recipe = await db.prepare("SELECT * FROM recipes WHERE slug = ?").bind(slug).first();
+if (!recipe) return Astro.redirect("/404");
+
+const ingredients = JSON.parse(recipe.ingredients || "[]");
+const steps = JSON.parse(recipe.steps || "[]");
+const substitutions = JSON.parse(recipe.substitutions || "[]");
+const commonMistakes = JSON.parse(recipe.common_mistakes || "[]");
+const tags = JSON.parse(recipe.tags || "[]");
+const dietary = JSON.parse(recipe.dietary || "[]");
+const groups = [...new Set(ingredients.map((i: any) => i.group))];
+const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=900&q=85";
+---
+<Base title={recipe.title + " | DishBloom"} description={recipe.description}>
+  <Navbar />
+  
+  <article class="recipe-page">
+    <div class="recipe-hero">
+      <img src={heroImg} alt={recipe.title} class="hero-img" />
+      <div class="hero-overlay">
+        <div class="hero-tags">
+          {dietary.map((d: string) => <span class="hero-tag">{d.replace("-", " ")}</span>)}
+        </div>
+      </div>
+    </div>
+
+    <div class="recipe-content">
+      <header class="recipe-header">
+        <div class="recipe-breadcrumb">
+          <a href="/">Home</a> <span>/</span> <span>{recipe.title}</span>
+        </div>
+        <h1 class="recipe-title">{recipe.title}</h1>
+        <p class="recipe-desc">{recipe.description}</p>
+        
+        <div class="recipe-meta-bar">
+          <div class="meta-item"><span class="meta-icon">&#9733;</span><span class="meta-val">{recipe.avg_rating || "4.5"}</span></div>
+          <div class="meta-item"><span class="meta-icon">&#9202;</span><span class="meta-val">{recipe.total_time} min</span></div>
+          <div class="meta-item"><span class="meta-icon">&#127860;</span><span class="meta-val">{recipe.servings} servings</span></div>
+          <div class="meta-item"><span class="meta-icon">&#128293;</span><span class="meta-val">{recipe.calories} cal</span></div>
+          <div class="meta-item"><span class="meta-icon">&#128278;</span><span class="meta-val">{recipe.difficulty}</span></div>
+        </div>
+
+        <div class="recipe-actions">
+          <button class="action-btn action-save">&#9829; Save</button>
+          <button class="action-btn action-print" onclick="window.print()">&#128424; Print</button>
+          <a href="#recipe-steps" class="action-btn action-jump">&#11015; Jump to recipe</a>
+        </div>
+      </header>
+
+      {recipe.quick_summary && (
+        <section class="quick-summary">
+          <div class="qs-badge">30 second summary</div>
+          <p>{recipe.quick_summary}</p>
+        </section>
+      )}
+
+      <section class="nutrition-card">
+        <h3>Nutrition per serving</h3>
+        <div class="nutrition-grid">
+          <div class="nut-item"><span class="nut-val">{recipe.calories}</span><span class="nut-label">Calories</span></div>
+          <div class="nut-item"><span class="nut-val">{recipe.protein}g</span><span class="nut-label">Protein</span></div>
+          <div class="nut-item"><span class="nut-val">{recipe.carbs}g</span><span class="nut-label">Carbs</span></div>
+          <div class="nut-item"><span class="nut-val">{recipe.fat}g</span><span class="nut-label">Fat</span></div>
+          <div class="nut-item"><span class="nut-val">{recipe.fiber}g</span><span class="nut-label">Fiber</span></div>
+        </div>
+      </section>
+
+      <section class="ingredients-section" id="ingredients">
+        <div class="ing-header">
+          <h2>Ingredients</h2>
+          <div class="servings-control">
+            <button class="srv-btn" data-action="decrease">-</button>
+            <span class="srv-val" id="servings-display">{recipe.servings}</span>
+            <button class="srv-btn" data-action="increase">+</button>
+            <span class="srv-label">servings</span>
+          </div>
+        </div>
+        {groups.map((group: string) => (
+          <div class="ing-group">
+            <h4 class="ing-group-title">{group}</h4>
+            {ingredients.filter((i: any) => i.group === group).map((ing: any) => (
+              <label class="ing-row">
+                <input type="checkbox" class="ing-check" />
+                <span class="ing-amount" data-base={ing.amount}>{ing.amount}</span>
+                <span class="ing-unit">{ing.unit}</span>
+                <span class="ing-item">{ing.item}</span>
+              </label>
+            ))}
+          </div>
+        ))}
+      </section>
+
+      <section class="steps-section" id="recipe-steps">
+        <h2>Instructions</h2>
+        {steps.map((step: any, idx: number) => (
+          <div class="step-card">
+            <div class="step-num">{idx + 1}</div>
+            <div class="step-content">
+              <h3 class="step-title">{step.title}</h3>
+              <p class="step-text">{step.text}</p>
+              {step.timer > 0 && (
+                <button class="timer-btn" data-seconds={step.timer}>
+                  &#9202; Start timer ({Math.floor(step.timer / 60)}:{String(step.timer % 60).padStart(2, "0")})
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {substitutions.length > 0 && (
+        <section class="subs-section">
+          <h2>Substitutions</h2>
+          <div class="subs-grid">
+            {substitutions.map((sub: any) => (
+              <div class="sub-card">
+                <span class="sub-original">{sub.original}</span>
+                <span class="sub-arrow">&#8594;</span>
+                <span class="sub-swap">{sub.swap}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {commonMistakes.length > 0 && (
+        <section class="mistakes-section">
+          <h2>Common mistakes</h2>
+          <div class="mistakes-list">
+            {commonMistakes.map((m: string) => (
+              <div class="mistake-item">
+                <span class="mistake-icon">&#9888;</span>
+                <span>{m}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section class="made-this-section">
+        <h2>I made this!</h2>
+        <p class="made-this-desc">Cooked this recipe? Share your photo and inspire others.</p>
+        <button class="made-this-btn">&#128247; Upload your photo</button>
+      </section>
+
+      <section class="tags-section">
+        <div class="tags-wrap">
+          {tags.map((tag: string) => (
+            <a href="#" class="recipe-tag">#{tag}</a>
+          ))}
+        </div>
+      </section>
+    </div>
+  </article>
+</Base>
+
+<style>
+.recipe-page { max-width: 900px; margin: 0 auto; }
+.recipe-hero { position: relative; }
+.hero-img { width: 100%; max-height: 500px; object-fit: cover; }
+.hero-overlay { position: absolute; bottom: 16px; left: 16px; display: flex; gap: 8px; }
+.hero-tag { background: rgba(255,255,255,0.92); padding: 4px 14px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; text-transform: capitalize; }
+.recipe-content { padding: 24px 20px 60px; }
+.recipe-breadcrumb { font-size: 0.8rem; color: var(--text-lighter); margin-bottom: 12px; }
+.recipe-breadcrumb a { color: var(--text-light); }
+.recipe-title { font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 10px; }
+.recipe-desc { color: var(--text-light); font-size: 1.05rem; line-height: 1.6; margin-bottom: 20px; }
+.recipe-meta-bar { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); margin-bottom: 16px; }
+.meta-item { display: flex; align-items: center; gap: 4px; font-size: 0.9rem; }
+.meta-icon { font-size: 1.1rem; }
+.meta-val { font-weight: 600; }
+.recipe-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+.action-btn { padding: 10px 20px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border); background: var(--white); transition: all 0.2s; }
+.action-btn:hover { border-color: var(--gold); color: var(--gold-dark); }
+.action-save { background: var(--gold); color: white; border-color: var(--gold); }
+.action-jump { background: var(--text); color: white; border-color: var(--text); }
+.quick-summary { background: var(--gold-light); border: 1px solid var(--gold); border-radius: var(--radius); padding: 20px; margin-bottom: 32px; }
+.qs-badge { display: inline-block; background: var(--gold); color: white; padding: 2px 12px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.quick-summary p { font-size: 0.95rem; line-height: 1.6; color: var(--gold-dark); }
+.nutrition-card { background: var(--bg); border-radius: var(--radius); padding: 20px; margin-bottom: 28px; }
+.nutrition-card h3 { font-size: 1rem; font-family: 'Inter', sans-serif; font-weight: 600; margin-bottom: 14px; }
+.nutrition-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+.nut-item { flex: 1; min-width: 70px; text-align: center; background: var(--white); border-radius: var(--radius-sm); padding: 12px 8px; }
+.nut-val { display: block; font-size: 1.2rem; font-weight: 700; color: var(--gold-dark); }
+.nut-label { font-size: 0.72rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.3px; }
+.ingredients-section { margin-bottom: 36px; }
+.ing-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.ing-header h2 { font-size: 1.4rem; }
+.servings-control { display: flex; align-items: center; gap: 8px; }
+.srv-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.srv-val { font-size: 1.1rem; font-weight: 700; min-width: 24px; text-align: center; }
+.srv-label { font-size: 0.85rem; color: var(--text-light); }
+.ing-group { margin-bottom: 16px; }
+.ing-group-title { font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold-dark); margin-bottom: 8px; }
+.ing-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); cursor: pointer; font-size: 0.95rem; }
+.ing-check { width: 20px; height: 20px; accent-color: var(--gold); }
+.ing-row:has(.ing-check:checked) { text-decoration: line-through; color: var(--text-lighter); }
+.ing-amount { font-weight: 600; min-width: 30px; }
+.ing-unit { color: var(--text-light); min-width: 40px; }
+.steps-section { margin-bottom: 36px; }
+.steps-section h2 { font-size: 1.4rem; margin-bottom: 20px; }
+.step-card { display: flex; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--border-light); }
+.step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--gold); color: white; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-content { flex: 1; }
+.step-title { font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+.step-text { font-size: 0.95rem; line-height: 1.6; color: var(--text-light); }
+.timer-btn { margin-top: 10px; padding: 8px 18px; border-radius: 100px; border: 1px solid var(--border); background: var(--bg); font-size: 0.82rem; font-weight: 500; }
+.subs-section { margin-bottom: 36px; }
+.subs-section h2 { font-size: 1.4rem; margin-bottom: 16px; }
+.subs-grid { display: flex; flex-direction: column; gap: 10px; }
+.sub-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--bg); border-radius: var(--radius-sm); font-size: 0.9rem; }
+.sub-original { font-weight: 600; min-width: 120px; }
+.sub-arrow { color: var(--gold); font-size: 1.2rem; }
+.sub-swap { color: var(--text-light); flex: 1; }
+.mistakes-section { margin-bottom: 36px; }
+.mistakes-section h2 { font-size: 1.4rem; margin-bottom: 16px; }
+.mistake-item { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; background: #FFF8F0; border-left: 3px solid #E8943C; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 8px; font-size: 0.9rem; }
+.mistake-icon { font-size: 1.1rem; flex-shrink: 0; }
+.made-this-section { text-align: center; padding: 32px; background: var(--bg); border-radius: var(--radius); margin-bottom: 28px; }
+.made-this-section h2 { font-size: 1.4rem; margin-bottom: 8px; }
+.made-this-desc { color: var(--text-light); font-size: 0.9rem; margin-bottom: 16px; }
+.made-this-btn { padding: 12px 28px; border-radius: 100px; border: none; background: var(--gold); color: white; font-weight: 600; font-size: 0.9rem; }
+.tags-section { padding: 20px 0; border-top: 1px solid var(--border-light); }
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.recipe-tag { padding: 6px 14px; border-radius: 100px; font-size: 0.82rem; background: var(--bg); color: var(--text-light); border: 1px solid var(--border-light); }
+.recipe-tag:hover { border-color: var(--gold); color: var(--gold-dark); background: var(--gold-light); }
+@media (max-width: 640px) {
+  .sub-card { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .sub-original { min-width: auto; }
+  .recipe-actions { flex-direction: column; }
+  .action-btn { text-align: center; }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const baseServings = parseInt(document.getElementById("servings-display")?.textContent || "4");
+  let cur = baseServings;
+  const display = document.getElementById("servings-display");
+  const amounts = document.querySelectorAll(".ing-amount");
+  const bases = Array.from(amounts).map(el => parseFloat(el.dataset.base));
+  document.querySelectorAll(".srv-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.action === "increase") cur++;
+      else if (cur > 1) cur--;
+      if (display) display.textContent = String(cur);
+      amounts.forEach((el, i) => {
+        const val = (bases[i] * cur / baseServings);
+        el.textContent = val % 1 === 0 ? String(val) : val.toFixed(1);
+      });
+    });
+  });
+  document.querySelectorAll(".timer-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      let secs = parseInt(btn.dataset.seconds || "0");
+      const orig = btn.textContent;
+      btn.disabled = true;
+      const iv = setInterval(() => {
+        secs--;
+        const m = Math.floor(secs / 60);
+        const s = String(secs % 60).padStart(2, "0");
+        btn.textContent = m + ":" + s;
+        btn.style.background = "var(--gold-light)";
+        btn.style.borderColor = "var(--gold)";
+        if (secs <= 0) {
+          clearInterval(iv);
+          btn.textContent = "Done!";
+          btn.style.background = "#E0F5E9";
+          btn.style.borderColor = "var(--green)";
+          setTimeout(() => { btn.textContent = orig || ""; btn.disabled = false; btn.style.background = ""; btn.style.borderColor = ""; }, 3000);
+        }
+      }, 1000);
+    });
+  });
+});
+</script>
