@@ -89,5 +89,15 @@ const { title = 'DishBloom — Discover Beautiful Food', description = 'Visual f
       }, 500);
     })();
   </script>
+<script>
+(function(){
+  if(sessionStorage.getItem("banner_closed")) return;
+  var b=document.createElement("div");
+  b.id="join-banner";
+  b.innerHTML='<span>🎉 <b>Join free</b> — Show off your culinary skills, take part in fun challenges & win prizes!</span><a href="/signup" style="background:#fff;color:#B8903E;padding:5px 16px;border-radius:99px;font-size:.8rem;font-weight:700;text-decoration:none">Sign up free →</a><button onclick="this.parentElement.remove();sessionStorage.setItem(\'banner_closed\',\'1\')" style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;opacity:.7">✕</button>';
+  b.style.cssText="background:linear-gradient(90deg,#D4A853,#E8B960,#F0C86E,#E8B960,#D4A853);padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;font-size:.88rem;color:#fff";
+  document.body.insertBefore(b,document.body.firstChild);
+})();
+</script>
 </body>
 </html>
