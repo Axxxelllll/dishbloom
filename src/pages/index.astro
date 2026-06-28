@@ -6,7 +6,9 @@ import AdSlot from '../components/AdSlot.astro';
 
 import { env } from "cloudflare:workers";
 const db = env.DB;
-const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, id DESC LIMIT 40").all();
+const { results: countResult } = await db.prepare("SELECT COUNT(*) as total FROM recipes").all();
+const totalRecipes = countResult[0].total;
+const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, RANDOM() LIMIT 40").all();
 ---
 <Base>
   <Navbar />
@@ -17,7 +19,7 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
       <h1 class="hero-title">Discover food that makes you <span class="gold-underline">bloom</span></h1>
       <p class="hero-sub">Browse thousands of stunning recipes. Save your favorites. Cook with confidence.</p>
       <div class="hero-stats">
-        <div class="stat"><span class="stat-num">{recipes.length}+</span> recipes</div>
+        <div class="stat"><span class="stat-num">{totalRecipes}</span> recipes</div>
         <div class="stat-dot"></div>
         <div class="stat"><span class="stat-num">50+</span> cuisines</div>
         <div class="stat-dot"></div>

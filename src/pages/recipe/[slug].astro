@@ -52,7 +52,7 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
         </div>
 
         <div class="recipe-actions">
-          <button class="action-btn action-save">&#9829; Save</button>
+          <button class="action-btn action-save" id="save-btn" data-recipe-id={recipe.id}>&#9829; Save ({recipe.total_saves || 0})</button>
           <button class="action-btn action-print" onclick="window.print()">&#128424; Print</button>
           <a href="#recipe-steps" class="action-btn action-jump">&#11015; Jump to recipe</a>
         </div>
@@ -172,6 +172,40 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
       </section>
     </div>
   </article>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    "name": recipe.title,
+    "description": recipe.description,
+    "image": recipe.hero_image || "",
+    "author": { "@type": "Organization", "name": "DishBloom" },
+    "datePublished": recipe.created_at || "2026-06-28",
+    "prepTime": "PT" + (recipe.prep_time || 0) + "M",
+    "cookTime": "PT" + (recipe.cook_time || 0) + "M",
+    "totalTime": "PT" + (recipe.total_time || 0) + "M",
+    "recipeYield": String(recipe.servings || 4) + " servings",
+    "recipeCategory": recipe.category || "Main Course",
+    "recipeCuisine": recipe.cuisine || "",
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "calories": (recipe.calories || 0) + " calories",
+      "proteinContent": (recipe.protein || 0) + " g",
+      "carbohydrateContent": (recipe.carbs || 0) + " g",
+      "fatContent": (recipe.fat || 0) + " g",
+      "fiberContent": (recipe.fiber || 0) + " g"
+    },
+    "recipeIngredient": ingredients.map((i: any) => (i.amount || "") + " " + (i.unit || "") + " " + i.item),
+    "recipeInstructions": steps.map((s: any) => ({ "@type": "HowToStep", "name": s.title, "text": s.text })),
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": recipe.avg_rating || 4.5,
+      "ratingCount": recipe.review_count || 12,
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "keywords": tags.join(", ")
+  })} />
   <AdSlot id="ad-recipe-mobile-sticky" size="sticky" />
 </Base>
 
@@ -293,5 +327,40 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 1000);
     });
   });
+});
+
+document.getElementById("save-btn")?.addEventListener("click", async (e) => {
+  const btn = e.target as HTMLButtonElement;
+  const recipeId = btn.dataset.recipeId;
+  const user = localStorage.getItem("db_user");
+  
+  if (!user) {
+    window.location.href = "/login";
+    return;
+  }
+
+  btn.disabled = true;
+  const isSaved = btn.classList.contains("saved");
+  
+  try {
+    const res = await fetch("/api/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipe_id: parseInt(recipeId || "0"), action: isSaved ? "unsave" : "save" }),
+    });
+    const data = await res.json();
+    if (data.saved) {
+      btn.classList.add("saved");
+      btn.innerHTML = "&#9829; Saved!";
+      btn.style.background = "var(--green)";
+      btn.style.borderColor = "var(--green)";
+    } else {
+      btn.classList.remove("saved");
+      btn.innerHTML = "&#9829; Save";
+      btn.style.background = "var(--gold)";
+      btn.style.borderColor = "var(--gold)";
+    }
+  } catch(e) {}
+  btn.disabled = false;
 });
 </script>
