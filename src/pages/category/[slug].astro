@@ -23,9 +23,55 @@ const categoryNames = {
 
 const title = categoryNames[slug] || slug.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
-const { results: recipes } = await db.prepare(
-  "SELECT * FROM recipes WHERE category = ? OR dietary LIKE ? ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, id DESC LIMIT 60"
-).bind(slug, "%" + slug + "%").all();
+let query = "SELECT * FROM recipes WHERE category = ? OR dietary LIKE ?";
+const params = [slug, "%" + slug + "%"];
+
+// Smart filters for special categories
+if (slug === "15-min") {
+  query = "SELECT * FROM recipes WHERE total_time <= 15";
+} else if (slug === "5-ingredient") {
+  query = "SELECT * FROM recipes WHERE LENGTH(ingredients) - LENGTH(REPLACE(ingredients, '\"item\"', '')) <= 30";
+} else if (slug === "quick") {
+  query = "SELECT * FROM recipes WHERE total_time <= 20 OR category = 'quick'";
+} else if (slug === "one-pot") {
+  query = "SELECT * FROM recipes WHERE category = 'one-pot' OR title LIKE '%One-Pot%' OR title LIKE '%One Pot%' OR title LIKE '%Skillet%' OR title LIKE '%Sheet Pan%'";
+} else if (slug === "budget") {
+  query = "SELECT * FROM recipes WHERE category = 'budget' OR title LIKE '%Budget%' OR title LIKE '%Cheap%' OR title LIKE '%Easy%Bean%' OR title LIKE '%Rice and Beans%' OR title LIKE '%Lentil%'";
+} else if (slug === "high-protein") {
+  query = "SELECT * FROM recipes WHERE protein >= 25 OR dietary LIKE '%high-protein%'";
+} else if (slug === "gluten-free") {
+  query = "SELECT * FROM recipes WHERE dietary LIKE '%gluten-free%' OR dietary LIKE '%Gluten%'";
+} else if (slug === "midnight") {
+  query = "SELECT * FROM recipes WHERE category = 'midnight' OR title LIKE '%Ramen%' OR title LIKE '%Midnight%' OR title LIKE '%Late%Night%'";
+} else if (slug === "comfort") {
+  query = "SELECT * FROM recipes WHERE category = 'comfort' OR title LIKE '%Soup%' OR title LIKE '%Stew%' OR title LIKE '%Casserole%' OR title LIKE '%Pot Pie%'";
+} else if (slug === "no-cook") {
+  query = "SELECT * FROM recipes WHERE cook_time = 0 OR category = 'no-cook' OR title LIKE '%No-Cook%' OR title LIKE '%No Cook%' OR title LIKE '%Smoothie%' OR title LIKE '%Salad%'";
+} else if (slug === "kids") {
+  query = "SELECT * FROM recipes WHERE category = 'kids' OR title LIKE '%Pancake%' OR title LIKE '%Mac and Cheese%' OR title LIKE '%Nugget%' OR title LIKE '%Pizza%'";
+} else if (slug === "date-night") {
+  query = "SELECT * FROM recipes WHERE category = 'date-night' OR title LIKE '%Steak%' OR title LIKE '%Lobster%' OR title LIKE '%Scallop%' OR title LIKE '%Chocolate%Lava%' OR title LIKE '%Creme Brulee%'";
+} else if (slug === "hangover") {
+  query = "SELECT * FROM recipes WHERE category = 'hangover' OR title LIKE '%Burrito%' OR title LIKE '%Ramen%' OR title LIKE '%Grilled Cheese%'";
+} else if (slug === "post-workout") {
+  query = "SELECT * FROM recipes WHERE category = 'post-workout' OR protein >= 30";
+} else if (slug === "brain-food") {
+  query = "SELECT * FROM recipes WHERE category = 'brain-food' OR title LIKE '%Salmon%' OR title LIKE '%Avocado%' OR title LIKE '%Smoothie Bowl%'";
+} else if (slug === "solo") {
+  query = "SELECT * FROM recipes WHERE category = 'solo' OR servings <= 2";
+} else if (slug === "meal-prep") {
+  query = "SELECT * FROM recipes WHERE category = 'meal-prep' OR title LIKE '%Meal Prep%' OR title LIKE '%Overnight%' OR title LIKE '%Bowl%'";
+} else if (slug === "drinks") {
+  query = "SELECT * FROM recipes WHERE category = 'drinks' OR title LIKE '%Mocktail%' OR title LIKE '%Latte%' OR title LIKE '%Smoothie%' OR title LIKE '%Mojito%' OR title LIKE '%Margarita%' OR title LIKE '%Spritz%' OR title LIKE '%Lemonade%' OR title LIKE '%Tea%'";
+}
+
+query += " ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, id DESC LIMIT 60";
+
+const stmt = (slug === "15-min" || slug === "5-ingredient" || slug === "quick" || slug === "one-pot" || slug === "budget" || slug === "high-protein" || slug === "gluten-free" || slug === "midnight" || slug === "comfort" || slug === "no-cook" || slug === "kids" || slug === "date-night" || slug === "hangover" || slug === "post-workout" || slug === "brain-food" || slug === "solo" || slug === "meal-prep" || slug === "drinks")
+  ? db.prepare(query)
+  : db.prepare(query).bind(slug, "%" + slug + "%");
+
+const { results: recipes } = await stmt.all();
 ---
 <Base title={title + " Recipes | DishBloom"}>
   <Navbar />
