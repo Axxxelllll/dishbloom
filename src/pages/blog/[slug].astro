@@ -1,0 +1,130 @@
+---
+export const prerender = false;
+import Base from '../../layouts/Base.astro';
+import Navbar from '../../components/Navbar.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const { slug } = Astro.params;
+const db = env.DB;
+const recipe = await db.prepare("SELECT * FROM recipes WHERE slug = ?").bind(slug).first();
+if (!recipe) return Astro.redirect("/404");
+
+const ingredients = (() => { try { return JSON.parse(recipe.ingredients || "[]"); } catch { return []; } })();
+const steps = (() => { try { return JSON.parse(recipe.steps || "[]"); } catch { return []; } })();
+const subs = (() => { try { return JSON.parse(recipe.substitutions || "[]"); } catch { return []; } })();
+const mistakes = (() => { try { return JSON.parse(recipe.common_mistakes || "[]"); } catch { return []; } })();
+const dietary = (() => { try { return JSON.parse(recipe.dietary || "[]"); } catch { return []; } })();
+const img = recipe.hero_image || "";
+---
+<Base title={"How to Make " + recipe.title + " | DishBloom Blog"} description={"Learn how to make the perfect " + recipe.title + ". Step-by-step guide with tips, substitutions, and common mistakes to avoid."}>
+  <Navbar />
+
+  <article class="blog-post">
+    <div class="blog-container">
+      <div class="blog-meta-top">
+        <a href="/blog" class="blog-back">&larr; Blog</a>
+        <span class="blog-date">{recipe.created_at ? new Date(recipe.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "June 2026"}</span>
+      </div>
+
+      <h1 class="blog-title">How to Make the Perfect {recipe.title}</h1>
+      <p class="blog-subtitle">{recipe.cuisine} · {recipe.difficulty} · {recipe.total_time} min · {recipe.servings} servings</p>
+
+      {dietary.length > 0 && (
+        <div class="blog-tags">
+          {dietary.map((d: string) => <span class="pill">{d}</span>)}
+        </div>
+      )}
+
+      <AdSlot id="ad-blog-top" size="leaderboard" />
+
+      {img && <img src={img} alt={recipe.title} class="blog-hero" />}
+
+      <div class="blog-body">
+        <p class="blog-intro">{recipe.description}</p>
+
+        <h2>Why this recipe works</h2>
+        <p>This {recipe.title} recipe has been crafted to deliver restaurant-quality results in your home kitchen. At just {recipe.total_time} minutes from start to finish, it fits perfectly into a busy schedule without sacrificing flavor. Each serving comes in at {recipe.calories} calories with {recipe.protein}g of protein, making it a balanced choice for any meal.</p>
+
+        <AdSlot id="ad-blog-mid1" size="rectangle" />
+
+        <h2>What you will need</h2>
+        <p>This recipe uses {ingredients.length} simple ingredients that you can find at any grocery store:</p>
+        <ul class="blog-list">
+          {ingredients.map((ing: any) => (
+            <li><strong>{ing.amount} {ing.unit}</strong> {ing.item}</li>
+          ))}
+        </ul>
+
+        <h2>Step by step instructions</h2>
+        {steps.map((step: any, idx: number) => (
+          <div class="blog-step">
+            <h3>Step {idx + 1}: {step.title}</h3>
+            <p>{step.text}</p>
+          </div>
+        ))}
+
+        <AdSlot id="ad-blog-mid2" size="rectangle" />
+
+        {subs.length > 0 && (
+          <div>
+            <h2>Easy substitutions</h2>
+            <p>Missing an ingredient? Here are some swaps that work perfectly:</p>
+            <ul class="blog-list">
+              {subs.map((s: any) => (
+                <li><strong>{s.original}</strong> → {s.swap}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {mistakes.length > 0 && (
+          <div>
+            <h2>Common mistakes to avoid</h2>
+            <p>Watch out for these pitfalls that can affect your results:</p>
+            <ul class="blog-list">
+              {mistakes.map((m: string) => <li>{m}</li>)}
+            </ul>
+          </div>
+        )}
+
+        <h2>Nutrition facts</h2>
+        <p>Per serving: <strong>{recipe.calories} calories</strong>, {recipe.protein}g protein, {recipe.carbs}g carbs, {recipe.fat}g fat, {recipe.fiber}g fiber.</p>
+
+        <div class="blog-cta">
+          <h2>Ready to cook?</h2>
+          <p>Get the interactive recipe with adjustable servings, built-in timers, and ingredient checklist.</p>
+          <a href={"/recipe/" + recipe.slug} class="blog-cta-btn">View full recipe →</a>
+        </div>
+
+        <AdSlot id="ad-blog-bottom" size="leaderboard" />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+.blog-post { padding: 32px 0 60px; }
+.blog-container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+.blog-meta-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.blog-back { font-size: 0.85rem; color: var(--gold-dark); font-weight: 500; }
+.blog-date { font-size: 0.82rem; color: var(--text-lighter); }
+.blog-title { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.2; margin-bottom: 10px; }
+.blog-subtitle { color: var(--text-light); font-size: 0.9rem; margin-bottom: 12px; }
+.blog-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.blog-hero { width: 100%; border-radius: 16px; margin-bottom: 28px; }
+.blog-body { font-size: 1.02rem; line-height: 1.75; color: var(--text); }
+.blog-body h2 { font-size: 1.4rem; margin-top: 36px; margin-bottom: 12px; }
+.blog-body h3 { font-size: 1.1rem; margin-top: 20px; margin-bottom: 8px; font-family: 'Inter', sans-serif; }
+.blog-body p { margin-bottom: 16px; color: var(--text-light); }
+.blog-intro { font-size: 1.1rem; color: var(--text); font-weight: 400; }
+.blog-list { padding-left: 20px; margin-bottom: 20px; }
+.blog-list li { margin-bottom: 8px; color: var(--text-light); }
+.blog-list li strong { color: var(--text); }
+.blog-step { margin-bottom: 20px; padding-left: 16px; border-left: 3px solid var(--gold-light); }
+.blog-cta { background: var(--bg); border-radius: 16px; padding: 32px; text-align: center; margin-top: 40px; }
+.blog-cta h2 { margin-top: 0; }
+.blog-cta p { color: var(--text-light); margin-bottom: 16px; }
+.blog-cta-btn { display: inline-block; padding: 14px 32px; border-radius: 100px; background: var(--gold); color: #fff; font-weight: 600; font-size: 0.95rem; }
+.blog-cta-btn:hover { background: var(--gold-dark); }
+</style>

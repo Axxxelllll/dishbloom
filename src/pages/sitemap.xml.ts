@@ -12,6 +12,7 @@ export const GET: APIRoute = async () => {
   
   let urls = `  <url><loc>https://thedishbloom.com</loc><changefreq>daily</changefreq><priority>1.0</priority><lastmod>${now}</lastmod></url>
   <url><loc>https://thedishbloom.com/search</loc><priority>0.6</priority></url>
+  <url><loc>https://thedishbloom.com/blog</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://thedishbloom.com/community</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
   <url><loc>https://thedishbloom.com/drinks</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://thedishbloom.com/about</loc><priority>0.4</priority></url>
@@ -23,7 +24,8 @@ export const GET: APIRoute = async () => {
   }
 
   for (const r of recipes) {
-    urls += `  <url><loc>https://thedishbloom.com/recipe/${r.slug}</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n`;
+    urls += `  <url><loc>https://thedishbloom.com/blog/${r.slug}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n`;
+  urls += `  <url><loc>https://thedishbloom.com/recipe/${r.slug}</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n`;
   }
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
