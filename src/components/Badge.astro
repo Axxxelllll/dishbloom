@@ -1,0 +1,48 @@
+---
+interface Props {
+  badge: string;
+  size?: "sm" | "md";
+}
+const { badge, size = "sm" } = Astro.props;
+
+const badges: Record<string, { emoji: string; label: string; color: string }> = {
+  "first-recipe": { emoji: "🌱", label: "First Recipe", color: "#4CAF50" },
+  "five-recipes": { emoji: "🍳", label: "Home Cook", color: "#FF9800" },
+  "ten-recipes": { emoji: "👨‍🍳", label: "Kitchen Pro", color: "#2196F3" },
+  "twenty-five-recipes": { emoji: "🔥", label: "Fire Starter", color: "#F44336" },
+  "fifty-recipes": { emoji: "⭐", label: "DishBloom Star", color: "#D4A853" },
+  "hundred-recipes": { emoji: "👑", label: "Legend", color: "#9C27B0" },
+  "first-review": { emoji: "💬", label: "Critic", color: "#607D8B" },
+  "ten-reviews": { emoji: "📝", label: "Top Reviewer", color: "#00BCD4" },
+  "first-save": { emoji: "❤️", label: "Collector", color: "#E91E63" },
+  "fifty-saves": { emoji: "📚", label: "Curator", color: "#795548" },
+  "made-five": { emoji: "🏆", label: "Active Cook", color: "#FF5722" },
+  "made-twenty": { emoji: "💎", label: "Master Chef", color: "#3F51B5" },
+  "early-adopter": { emoji: "🚀", label: "Early Adopter", color: "#009688" },
+  "challenge-winner": { emoji: "🥇", label: "Challenge Winner", color: "#FFC107" },
+  "trending": { emoji: "📈", label: "Trending Creator", color: "#673AB7" },
+};
+
+const b = badges[badge] || { emoji: "🏅", label: badge, color: "#999" };
+const sizeClass = size === "md" ? "badge-md" : "badge-sm";
+---
+<span class={"badge " + sizeClass} style={"--badge-color: " + b.color} title={b.label}>
+  <span class="badge-emoji">{b.emoji}</span>
+  {size === "md" && <span class="badge-label">{b.label}</span>}
+</span>
+
+<style>
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--badge-color) 12%, white);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 25%, white);
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.badge-sm { padding: 2px 6px; font-size: 0.7rem; }
+.badge-md { padding: 4px 12px; font-size: 0.82rem; }
+.badge-emoji { line-height: 1; }
+.badge-label { font-weight: 600; color: var(--badge-color); }
+</style>

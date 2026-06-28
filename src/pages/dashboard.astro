@@ -3,6 +3,7 @@ export const prerender = false;
 import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
 import AdSlot from '../components/AdSlot.astro';
+import Badge from '../components/Badge.astro';
 import { env } from "cloudflare:workers";
 
 const db = env.DB;
@@ -58,6 +59,18 @@ try {
         <div class="dash-stat"><span class="ds-num">{stats.saved}</span><span class="ds-label">Saved</span></div>
         <div class="dash-stat"><span class="ds-num">{stats.submitted}</span><span class="ds-label">My recipes</span></div>
         <div class="dash-stat"><span class="ds-num">{stats.streak}</span><span class="ds-label">Day streak</span></div>
+      </div>
+
+      <div class="dash-badges">
+        <h3 style="font-size:0.85rem;font-family:Inter,sans-serif;color:var(--text-light);margin-bottom:8px;">Badges</h3>
+        <div class="badges-row">
+          {(() => { try { return JSON.parse(user.badges || "[]"); } catch { return []; } })().map((b: string) => (
+            <Badge badge={b} size="md" />
+          ))}
+          {(() => { try { return JSON.parse(user.badges || "[]").length === 0; } catch { return true; } })() && (
+            <span style="font-size:0.85rem;color:var(--text-lighter)">Submit your first recipe to earn a badge!</span>
+          )}
+        </div>
       </div>
 
       <div class="dash-actions">
