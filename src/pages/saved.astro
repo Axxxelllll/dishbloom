@@ -1,0 +1,83 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const db = env.DB;
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const tokenMatch = cookieHeader.match(/db_token=([^;]+)/);
+let recipes: any[] = [];
+let loggedIn = false;
+
+if (tokenMatch) {
+  try {
+    const user = JSON.parse(atob(tokenMatch[1]));
+    if (user.exp > Date.now()) {
+      loggedIn = true;
+      const { results } = await db.prepare(
+        "SELECT r.* FROM recipes r JOIN collection_recipes cr ON r.id = cr.recipe_id JOIN collections c ON cr.collection_id = c.id WHERE c.user_id = ? AND c.name = 'Saved' ORDER BY cr.id DESC"
+      ).bind(user.id).all();
+      recipes = results;
+    }
+  } catch {}
+}
+---
+<Base title="Saved Recipes | DishBloom">
+  <Navbar />
+
+  <section class="saved-hero">
+    <div class="container">
+      <h1>Your saved recipes</h1>
+      <p class="saved-sub">{loggedIn ? recipes.length + " recipes saved" : "Log in to see your saved recipes"}</p>
+    </div>
+  </section>
+
+  {!loggedIn && (
+    <div class="empty-state">
+      <a href="/login" class="cta-btn">Log in to see saves</a>
+    </div>
+  )}
+
+  {loggedIn && recipes.length > 0 && (
+    <div class="masonry">
+      {recipes.map(r => {
+        const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+        return (
+          <a href={"/recipe/" + r.slug} class="recipe-card">
+            <img src={img} alt={r.title} loading="lazy" />
+            <div class="card-body">
+              <div class="card-title">{r.title}</div>
+              <div class="card-meta">
+                <span>&#9733; {r.avg_rating || "4.5"}</span>
+                <span class="dot">&middot;</span>
+                <span>{r.total_time} min</span>
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  )}
+
+  {loggedIn && recipes.length === 0 && (
+    <div class="empty-state">
+      <h2>No saved recipes yet</h2>
+      <p>Browse recipes and tap the heart to save your favorites</p>
+      <a href="/" class="cta-btn">Browse recipes</a>
+    </div>
+  )}
+
+  <AdSlot id="ad-saved" size="leaderboard" />
+</Base>
+
+<style>
+.saved-hero { text-align: center; padding: 48px 0 24px; }
+.saved-hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 8px; }
+.saved-sub { color: var(--text-light); font-size: 0.95rem; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state h2 { font-size: 1.4rem; margin-bottom: 8px; }
+.empty-state p { color: var(--text-light); margin-bottom: 20px; }
+.cta-btn { display: inline-block; padding: 12px 28px; border-radius: 100px; background: var(--gold); color: white; font-weight: 600; }
+</style>

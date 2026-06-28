@@ -9,11 +9,12 @@ import AdSlot from '../components/AdSlot.astro';
     <div class="auth-card">
       <h1>Join DishBloom</h1>
       <p class="auth-sub">Create an account to save recipes, build collections, and share your cooking</p>
-      <div class="auth-form">
-        <input type="text" placeholder="Display name" class="auth-input" />
-        <input type="email" placeholder="Email address" class="auth-input" />
-        <input type="password" placeholder="Password" class="auth-input" />
-        <button class="auth-btn auth-btn-gold">Create account</button>
+      <div class="auth-form" id="signup-form">
+        <input type="text" id="name" placeholder="Display name" class="auth-input" />
+        <input type="email" id="email" placeholder="Email address" class="auth-input" />
+        <input type="password" id="password" placeholder="Password" class="auth-input" />
+        <p class="auth-error" id="error" style="display:none"></p>
+        <button class="auth-btn" id="signup-btn">Create account</button>
       </div>
       <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
     </div>
@@ -29,8 +30,46 @@ import AdSlot from '../components/AdSlot.astro';
 .auth-form { display: flex; flex-direction: column; gap: 12px; }
 .auth-input { padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.95rem; outline: none; }
 .auth-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-light); }
-.auth-btn-gold { padding: 14px; border-radius: var(--radius); border: none; background: var(--gold); color: white; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 4px; }
-.auth-btn-gold:hover { background: var(--gold-dark); }
+.auth-btn { padding: 14px; border-radius: var(--radius); border: none; background: var(--gold); color: white; font-weight: 600; font-size: 1rem; cursor: pointer; }
+.auth-btn:hover { background: var(--gold-dark); }
+.auth-error { color: var(--red); font-size: 0.85rem; text-align: left; }
 .auth-switch { margin-top: 20px; font-size: 0.88rem; color: var(--text-light); }
 .auth-switch a { color: var(--gold-dark); font-weight: 600; }
 </style>
+
+<script>
+document.getElementById("signup-btn")?.addEventListener("click", async () => {
+  const name = (document.getElementById("name") as HTMLInputElement).value;
+  const email = (document.getElementById("email") as HTMLInputElement).value;
+  const password = (document.getElementById("password") as HTMLInputElement).value;
+  const error = document.getElementById("error")!;
+  const btn = document.getElementById("signup-btn") as HTMLButtonElement;
+
+  error.style.display = "none";
+  btn.textContent = "Creating account...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, name }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      error.textContent = data.error;
+      error.style.display = "block";
+      btn.textContent = "Create account";
+      btn.disabled = false;
+      return;
+    }
+    localStorage.setItem("db_user", JSON.stringify(data.user));
+    window.location.href = "/";
+  } catch(e) {
+    error.textContent = "Something went wrong";
+    error.style.display = "block";
+    btn.textContent = "Create account";
+    btn.disabled = false;
+  }
+});
+</script>

@@ -1,0 +1,108 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const db = env.DB;
+const { results: userRecipes } = await db.prepare(
+  "SELECT r.*, u.display_name, u.username FROM recipes r LEFT JOIN users u ON r.author_id = u.id WHERE r.source = 'user' ORDER BY r.id DESC LIMIT 20"
+).all();
+
+const { results: topRecipes } = await db.prepare(
+  "SELECT * FROM recipes ORDER BY total_saves DESC LIMIT 10"
+).all();
+---
+<Base title="Community | DishBloom">
+  <Navbar />
+
+  <section class="community-hero">
+    <div class="container">
+      <h1>Community kitchen</h1>
+      <p class="community-sub">Recipes shared by home cooks like you. Join in!</p>
+      <div class="community-actions">
+        <a href="/submit" class="cta-btn">Share your recipe</a>
+      </div>
+    </div>
+  </section>
+
+  <AdSlot id="ad-community-top" size="leaderboard" />
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Most saved recipes</h2>
+      </div>
+    </div>
+    <div class="masonry">
+      {topRecipes.map(r => {
+        const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+        return (
+          <a href={"/recipe/" + r.slug} class="recipe-card">
+            <img src={img} alt={r.title} loading="lazy" />
+            <div class="card-body">
+              <div class="card-title">{r.title}</div>
+              <div class="card-meta">
+                <span>&#9829; {r.total_saves} saves</span>
+                <span class="dot">&middot;</span>
+                <span>{r.total_time} min</span>
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <AdSlot id="ad-community-mid" size="rectangle" />
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Community recipes</h2>
+      </div>
+    </div>
+    {userRecipes.length > 0 ? (
+      <div class="masonry">
+        {userRecipes.map(r => {
+          const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+          return (
+            <a href={"/recipe/" + r.slug} class="recipe-card">
+              <img src={img} alt={r.title} loading="lazy" />
+              <div class="card-body">
+                <div class="card-title">{r.title}</div>
+                <div class="card-meta">
+                  <span>by {r.display_name || "Anonymous"}</span>
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <h2>Be the first!</h2>
+        <p>No community recipes yet. Share yours and inspire others.</p>
+        <a href="/submit" class="cta-btn">Share a recipe</a>
+      </div>
+    )}
+  </section>
+
+  <AdSlot id="ad-community-bottom" size="leaderboard" />
+  <AdSlot id="ad-community-sticky" size="sticky" />
+</Base>
+
+<style>
+.community-hero { text-align: center; padding: 48px 0 32px; }
+.community-hero h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 10px; }
+.community-sub { color: var(--text-light); font-size: 1.05rem; margin-bottom: 20px; }
+.cta-btn { display: inline-block; padding: 12px 28px; border-radius: 100px; background: var(--gold); color: white; font-weight: 600; font-size: 0.95rem; }
+.cta-btn:hover { background: var(--gold-dark); }
+.section { padding: 40px 0; }
+.section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+.section-header h2 { font-size: 1.6rem; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state h2 { font-size: 1.4rem; margin-bottom: 8px; }
+.empty-state p { color: var(--text-light); margin-bottom: 20px; }
+</style>

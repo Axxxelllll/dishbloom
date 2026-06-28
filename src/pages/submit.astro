@@ -1,0 +1,115 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+---
+<Base title="Submit a Recipe | DishBloom">
+  <Navbar />
+  <section class="submit-page">
+    <div class="submit-card">
+      <h1>Share your recipe</h1>
+      <p class="submit-sub">Got a killer recipe? Share it with the DishBloom community.</p>
+      
+      <div class="submit-form" id="recipe-form">
+        <input type="text" id="title" placeholder="Recipe title" class="auth-input" />
+        <textarea id="description" placeholder="Short description (2-3 sentences)" class="auth-input" rows="3"></textarea>
+        
+        <div class="form-row">
+          <select id="cuisine" class="auth-input">
+            <option value="">Cuisine</option>
+            <option>American</option><option>Italian</option><option>Mexican</option>
+            <option>Indian</option><option>Chinese</option><option>Japanese</option>
+            <option>Thai</option><option>Korean</option><option>Mediterranean</option>
+            <option>French</option><option>Other</option>
+          </select>
+          <select id="difficulty" class="auth-input">
+            <option value="">Difficulty</option>
+            <option>Easy</option><option>Medium</option><option>Hard</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <input type="number" id="prep_time" placeholder="Prep (min)" class="auth-input" />
+          <input type="number" id="cook_time" placeholder="Cook (min)" class="auth-input" />
+          <input type="number" id="servings" placeholder="Servings" class="auth-input" />
+        </div>
+
+        <textarea id="ingredients" placeholder="Ingredients (one per line, e.g. '2 cups flour')" class="auth-input" rows="8"></textarea>
+        <textarea id="steps" placeholder="Steps (one per line)" class="auth-input" rows="8"></textarea>
+        <input type="text" id="tags" placeholder="Tags (comma separated, e.g. quick, healthy, vegan)" class="auth-input" />
+        
+        <p class="auth-error" id="error" style="display:none"></p>
+        <button class="auth-btn" id="submit-btn">Submit recipe</button>
+      </div>
+    </div>
+  </section>
+  <AdSlot id="ad-submit" size="leaderboard" />
+</Base>
+
+<style>
+.submit-page { display: flex; justify-content: center; padding: 40px 20px; }
+.submit-card { width: 100%; max-width: 600px; background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 40px 32px; }
+.submit-card h1 { font-size: 1.8rem; margin-bottom: 8px; text-align: center; }
+.submit-sub { color: var(--text-light); margin-bottom: 28px; font-size: 0.95rem; text-align: center; }
+.submit-form { display: flex; flex-direction: column; gap: 12px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .auth-input { flex: 1; }
+.auth-input { padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.95rem; outline: none; font-family: inherit; }
+.auth-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-light); }
+textarea.auth-input { resize: vertical; }
+select.auth-input { color: var(--text-light); }
+.auth-btn { padding: 14px; border-radius: var(--radius); border: none; background: var(--gold); color: white; font-weight: 600; font-size: 1rem; cursor: pointer; }
+.auth-btn:hover { background: var(--gold-dark); }
+.auth-error { color: var(--red); font-size: 0.85rem; }
+</style>
+
+<script>
+document.getElementById("submit-btn")?.addEventListener("click", async () => {
+  const user = localStorage.getItem("db_user");
+  if (!user) { window.location.href = "/login"; return; }
+
+  const title = (document.getElementById("title") as HTMLInputElement).value;
+  const description = (document.getElementById("description") as HTMLTextAreaElement).value;
+  const cuisine = (document.getElementById("cuisine") as HTMLSelectElement).value;
+  const difficulty = (document.getElementById("difficulty") as HTMLSelectElement).value;
+  const prep_time = parseInt((document.getElementById("prep_time") as HTMLInputElement).value) || 0;
+  const cook_time = parseInt((document.getElementById("cook_time") as HTMLInputElement).value) || 0;
+  const servings = parseInt((document.getElementById("servings") as HTMLInputElement).value) || 4;
+  const ingredients = (document.getElementById("ingredients") as HTMLTextAreaElement).value;
+  const steps = (document.getElementById("steps") as HTMLTextAreaElement).value;
+  const tags = (document.getElementById("tags") as HTMLInputElement).value;
+  const error = document.getElementById("error")!;
+  const btn = document.getElementById("submit-btn") as HTMLButtonElement;
+
+  if (!title || !ingredients || !steps) {
+    error.textContent = "Title, ingredients, and steps are required";
+    error.style.display = "block";
+    return;
+  }
+
+  btn.textContent = "Submitting...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/submit-recipe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, description, cuisine, difficulty, prep_time, cook_time, servings, ingredients, steps, tags }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      error.textContent = data.error;
+      error.style.display = "block";
+      btn.textContent = "Submit recipe";
+      btn.disabled = false;
+      return;
+    }
+    window.location.href = "/recipe/" + data.slug;
+  } catch(e) {
+    error.textContent = "Something went wrong";
+    error.style.display = "block";
+    btn.textContent = "Submit recipe";
+    btn.disabled = false;
+  }
+});
+</script>
