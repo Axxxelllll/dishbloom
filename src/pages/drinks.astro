@@ -1,0 +1,79 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const db = env.DB;
+const { results: recipes } = await db.prepare(
+  "SELECT * FROM recipes WHERE category = 'drinks' OR category = 'mocktail' OR tags LIKE '%mocktail%' OR tags LIKE '%drink%' OR tags LIKE '%smoothie%' OR tags LIKE '%latte%' OR tags LIKE '%cocktail%' OR title LIKE '%Mocktail%' OR title LIKE '%Latte%' OR title LIKE '%Smoothie%' OR title LIKE '%Juice%' OR title LIKE '%Tea%' ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, id DESC LIMIT 60"
+).all();
+---
+<Base title="Drinks & Mocktails | DishBloom">
+  <Navbar />
+
+  <section class="drinks-hero">
+    <div class="container">
+      <h1 class="drinks-title">Drinks & Mocktails</h1>
+      <p class="drinks-sub">From viral TikTok mocktails to wellness elixirs and cafe-style lattes. No alcohol needed.</p>
+      <div class="drinks-tags">
+        <span class="pill">Virgin Classics</span>
+        <span class="pill">Spicy Blends</span>
+        <span class="pill">Botanical</span>
+        <span class="pill">Wellness</span>
+        <span class="pill">Global Flavors</span>
+        <span class="pill">Dirty Sodas</span>
+      </div>
+    </div>
+  </section>
+
+  <AdSlot id="ad-drinks-top" size="leaderboard" />
+
+  {recipes.length > 0 ? (
+    <div class="masonry">
+      {recipes.map(r => {
+        const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+        const dietaryArr = (() => { try { return JSON.parse(r.dietary || "[]"); } catch(e) { return []; } })();
+        const tag = dietaryArr[0] || r.category || "";
+        return (
+          <a href={"/recipe/" + r.slug} class="recipe-card">
+            <img src={img} alt={r.title} loading="lazy" />
+            <button class="save-btn" aria-label="Save">&#9829;</button>
+            <div class="card-body">
+              <div class="card-title">{r.title}</div>
+              <div class="card-meta">
+                <span>&#9733; {r.avg_rating || "4.5"}</span>
+                <span class="dot">&middot;</span>
+                <span>{r.total_time} min</span>
+                <span class="dot">&middot;</span>
+                <span>{r.calories} cal</span>
+              </div>
+              {tag && <div style="margin-top:8px"><span class="pill">{tag}</span></div>}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  ) : (
+    <div class="empty-state">
+      <h2>Drinks coming soon!</h2>
+      <p>We are mixing up mocktails, smoothies, and wellness drinks. Check back soon!</p>
+      <a href="/" class="back-btn">&larr; Browse recipes</a>
+    </div>
+  )}
+
+  <AdSlot id="ad-drinks-bottom" size="leaderboard" />
+  <AdSlot id="ad-drinks-sticky" size="sticky" />
+</Base>
+
+<style>
+.drinks-hero { text-align: center; padding: 48px 0 32px; }
+.drinks-title { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 10px; }
+.drinks-sub { color: var(--text-light); font-size: 1.05rem; max-width: 520px; margin: 0 auto 20px; }
+.drinks-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.empty-state { text-align: center; padding: 80px 20px; }
+.empty-state h2 { font-size: 1.6rem; margin-bottom: 8px; }
+.empty-state p { color: var(--text-light); margin-bottom: 20px; }
+.back-btn { display: inline-block; padding: 10px 24px; border-radius: 100px; background: var(--gold); color: white; font-weight: 600; }
+</style>
