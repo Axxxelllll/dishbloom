@@ -4,6 +4,7 @@ import Base from '../../layouts/Base.astro';
 import Navbar from '../../components/Navbar.astro';
 import CategoryBar from '../../components/CategoryBar.astro';
 import AdSlot from '../../components/AdSlot.astro';
+import CommunityBanner from '../../components/CommunityBanner.astro';
 import { env } from "cloudflare:workers";
 
 const { slug } = Astro.params;
@@ -118,6 +119,8 @@ const { results: recipes } = await stmt.all();
       <a href="/" class="back-btn">&larr; Browse all recipes</a>
     </div>
   )}
+  <CommunityBanner />
+
   <AdSlot id="ad-category-bottom" size="leaderboard" />
   <AdSlot id="ad-category-sticky" size="sticky" />
 </Base>

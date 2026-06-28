@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
 import CategoryBar from '../components/CategoryBar.astro';
 import AdSlot from '../components/AdSlot.astro';
+import CommunityBanner from '../components/CommunityBanner.astro';
 
 import { env } from "cloudflare:workers";
 const db = env.DB;
@@ -101,6 +102,8 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
       </div>
     </div>
   </section>
+
+  <CommunityBanner />
 
   <AdSlot id="ad-before-footer" size="leaderboard" />
 

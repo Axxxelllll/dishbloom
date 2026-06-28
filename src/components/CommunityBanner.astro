@@ -1,0 +1,114 @@
+---
+---
+<section class="comm-banner">
+  <div class="comm-inner">
+    <div class="comm-content">
+      <span class="comm-badge">Free to join</span>
+      <h2 class="comm-title">Show off your culinary skills</h2>
+      <p class="comm-text">Join DishBloom to save recipes, take part in fun weekly challenges, share your creations, and win prizes.</p>
+      <div class="comm-actions">
+        <a href="/signup" class="comm-btn comm-btn-gold">Join for free</a>
+        <a href="/community" class="comm-btn comm-btn-outline">Explore community</a>
+      </div>
+      <div class="comm-perks">
+        <span class="perk">&#9829; Save unlimited recipes</span>
+        <span class="perk">&#127942; Weekly cooking challenges</span>
+        <span class="perk">&#127381; Win prizes & badges</span>
+        <span class="perk">&#128247; Share "I made this" photos</span>
+      </div>
+    </div>
+    <div class="comm-visual">
+      <div class="comm-card c1">&#127858;</div>
+      <div class="comm-card c2">&#127835;</div>
+      <div class="comm-card c3">&#127856;</div>
+    </div>
+  </div>
+</section>
+
+<style>
+.comm-banner {
+  background: linear-gradient(135deg, #FFF8EE 0%, #FFF0D4 50%, #FFECC7 100%);
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  padding: 48px 20px;
+  margin: 40px 0;
+}
+.comm-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.comm-content { flex: 1; }
+.comm-badge {
+  display: inline-block;
+  background: var(--gold);
+  color: white;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+.comm-title {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.comm-text {
+  color: var(--text-light);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+.comm-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.comm-btn {
+  padding: 12px 28px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.comm-btn-gold { background: var(--gold); color: white; }
+.comm-btn-gold:hover { background: var(--gold-dark); transform: translateY(-1px); }
+.comm-btn-outline { background: transparent; border: 1.5px solid var(--gold); color: var(--gold-dark); }
+.comm-btn-outline:hover { background: var(--gold); color: white; }
+.comm-perks { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+.perk {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+.comm-visual {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.comm-card {
+  width: 90px;
+  height: 120px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s;
+}
+.comm-card:hover { transform: translateY(-4px); }
+.c1 { background: #FFF; transform: rotate(-3deg); }
+.c2 { background: #FFF; transform: rotate(2deg) translateY(-8px); }
+.c3 { background: #FFF; transform: rotate(-1deg); }
+@media (max-width: 768px) {
+  .comm-inner { flex-direction: column; text-align: center; }
+  .comm-actions { justify-content: center; }
+  .comm-perks { justify-content: center; }
+  .comm-text { margin-left: auto; margin-right: auto; }
+  .comm-visual { display: none; }
+}
+</style>
