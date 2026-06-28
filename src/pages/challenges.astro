@@ -1,0 +1,109 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const db = env.DB;
+const { results: challenges } = await db.prepare(
+  "SELECT * FROM challenges ORDER BY id DESC LIMIT 10"
+).all();
+
+const activeChallenge = challenges.find((c: any) => c.status === 'active') || null;
+const pastChallenges = challenges.filter((c: any) => c.status !== 'active');
+---
+<Base title="Cooking Challenges | DishBloom">
+  <Navbar />
+
+  <section class="ch-hero">
+    <div class="container">
+      <h1>Weekly cooking challenges</h1>
+      <p class="ch-sub">Put your skills to the test. Cook, share, and win prizes every week!</p>
+    </div>
+  </section>
+
+  <AdSlot id="ad-challenges-top" size="leaderboard" />
+
+  {activeChallenge ? (
+    <section class="ch-active container">
+      <div class="ch-card ch-card-active">
+        <span class="ch-live">LIVE NOW</span>
+        <h2>{activeChallenge.title}</h2>
+        <p class="ch-desc">{activeChallenge.description}</p>
+        <div class="ch-meta">
+          <span>&#127942; Prize: {activeChallenge.prize || "Community badge"}</span>
+          <span>&#128197; Ends: {activeChallenge.end_date || "Sunday"}</span>
+        </div>
+        <div class="ch-rules">
+          <h3>How to participate</h3>
+          <p>1. Cook the challenge recipe your way</p>
+          <p>2. Take a photo of your creation</p>
+          <p>3. Share it on the community page with #DishBloomChallenge</p>
+          <p>4. Vote for your favorites!</p>
+        </div>
+        <a href="/submit" class="ch-btn">Submit your entry</a>
+      </div>
+    </section>
+  ) : (
+    <section class="ch-active container">
+      <div class="ch-card ch-card-coming">
+        <span class="ch-badge">Coming soon</span>
+        <h2>Next challenge drops Monday!</h2>
+        <p class="ch-desc">Sign up to get notified when the next weekly challenge goes live. Past winners get featured on the homepage!</p>
+        <a href="/signup" class="ch-btn">Sign up for alerts</a>
+      </div>
+    </section>
+  )}
+
+  <AdSlot id="ad-challenges-mid" size="rectangle" />
+
+  <section class="ch-past container">
+    <h2>Past challenges</h2>
+    {pastChallenges.length > 0 ? (
+      <div class="ch-grid">
+        {pastChallenges.map((c: any) => (
+          <div class="ch-card ch-card-past">
+            <h3>{c.title}</h3>
+            <p>{c.description}</p>
+            <span class="ch-entries">{c.entry_count || 0} entries</span>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="ch-empty">
+        <p>No past challenges yet. The first one is coming soon!</p>
+      </div>
+    )}
+  </section>
+
+  <AdSlot id="ad-challenges-bottom" size="leaderboard" />
+</Base>
+
+<style>
+.ch-hero { text-align: center; padding: 48px 0 24px; }
+.ch-hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+.ch-sub { color: var(--text-light); font-size: 1rem; margin-top: 6px; }
+.ch-active { max-width: 650px; margin: 24px auto; }
+.ch-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
+.ch-card-active { border-color: var(--gold); box-shadow: 0 4px 20px rgba(212,168,83,0.15); }
+.ch-card-coming { text-align: center; }
+.ch-live { display: inline-block; background: #E74C3C; color: white; padding: 4px 14px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+.ch-badge { display: inline-block; background: var(--gold); color: white; padding: 4px 14px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
+.ch-card h2 { font-size: 1.5rem; margin-bottom: 8px; }
+.ch-desc { color: var(--text-light); font-size: 0.95rem; line-height: 1.5; margin-bottom: 16px; }
+.ch-meta { display: flex; gap: 20px; font-size: 0.85rem; color: var(--text-light); margin-bottom: 16px; }
+.ch-rules { background: var(--bg); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+.ch-rules h3 { font-size: 0.9rem; font-family: 'Inter', sans-serif; margin-bottom: 8px; }
+.ch-rules p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; }
+.ch-btn { display: inline-block; padding: 12px 28px; border-radius: 100px; background: var(--gold); color: white; font-weight: 600; font-size: 0.92rem; }
+.ch-past { max-width: 800px; margin: 40px auto 60px; }
+.ch-past h2 { font-size: 1.4rem; margin-bottom: 16px; }
+.ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.ch-card-past { padding: 20px; }
+.ch-card-past h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.ch-card-past p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px; }
+.ch-entries { font-size: 0.78rem; color: var(--gold-dark); font-weight: 600; }
+.ch-empty { text-align: center; padding: 40px; color: var(--text-light); }
+</style>

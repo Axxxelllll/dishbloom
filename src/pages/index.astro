@@ -122,6 +122,48 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
     </div>
     <div class="footer-bottom container">2026 DishBloom. Made with love and good food.</div>
   </footer>
+
+<script>
+(function() {
+  let offset = 40;
+  let loading = false;
+  let noMore = false;
+  const grid = document.querySelector(".masonry");
+  if (!grid) return;
+
+  const sentinel = document.createElement("div");
+  sentinel.id = "scroll-sentinel";
+  sentinel.style.height = "1px";
+  grid.parentNode.insertBefore(sentinel, grid.nextSibling);
+
+  const observer = new IntersectionObserver(async (entries) => {
+    if (!entries[0].isIntersecting || loading || noMore) return;
+    loading = true;
+
+    try {
+      const res = await fetch("/api/recipes?offset=" + offset + "&limit=20");
+      const data = await res.json();
+      if (!data.recipes.length || !data.hasMore) { noMore = true; return; }
+
+      data.recipes.forEach(function(r) {
+        const dietary = (() => { try { return JSON.parse(r.dietary || "[]"); } catch { return []; } })();
+        const tag = dietary[0] || r.category || "";
+        const card = document.createElement("a");
+        card.href = "/recipe/" + r.slug;
+        card.className = "recipe-card";
+        card.innerHTML = '<img src="' + (r.hero_image || "") + '" alt="' + r.title + '" loading="lazy" /><div class="card-body"><div class="card-title">' + r.title + '</div><div class="card-meta"><span>&#9733; ' + (r.avg_rating || "4.5") + '</span><span class="dot">&middot;</span><span>' + r.total_time + ' min</span><span class="dot">&middot;</span><span>' + r.calories + ' cal</span></div>' + (tag ? '<div style="margin-top:8px"><span class="pill">' + tag + '</span></div>' : '') + '</div>';
+        grid.appendChild(card);
+      });
+
+      offset += 20;
+    } catch(e) {}
+    loading = false;
+  }, { rootMargin: "400px" });
+
+  observer.observe(sentinel);
+})();
+</script>
+
   <AdSlot id="ad-mobile-sticky" size="sticky" />
 </Base>
 

@@ -36,7 +36,7 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
 
     <AdSlot id="ad-below-recipe-hero" size="leaderboard" />
 
-    <div class="recipe-content">
+    <div class="recipe-content" data-category={recipe.category} data-cuisine={recipe.cuisine}>
       <header class="recipe-header">
         <div class="recipe-breadcrumb">
           <a href="/">Home</a> <span>/</span> <span>{recipe.title}</span>
@@ -209,7 +209,168 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
     },
     "keywords": tags.join(", ")
   })} />
-  <AdSlot id="ad-recipe-mobile-sticky" size="sticky" />
+  
+      <section class="related-section">
+        <h2>More like this</h2>
+        <div class="related-grid" id="related-grid"></div>
+      </section>
+
+      <section class="reviews-section">
+        <h2>Reviews</h2>
+        <div class="review-form" id="review-form">
+          <div class="star-picker" id="star-picker">
+            <span class="star" data-val="1">&#9733;</span>
+            <span class="star" data-val="2">&#9733;</span>
+            <span class="star" data-val="3">&#9733;</span>
+            <span class="star" data-val="4">&#9733;</span>
+            <span class="star" data-val="5">&#9733;</span>
+          </div>
+          <textarea id="review-text" placeholder="Share your thoughts on this recipe..." rows="3" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;resize:vertical;"></textarea>
+          <button class="action-btn" id="submit-review" style="margin-top:8px">Submit review</button>
+        </div>
+        <div id="reviews-list"></div>
+      </section>
+
+      <section class="made-section">
+        <h2>I made this!</h2>
+        <div class="made-form">
+          <input type="text" id="made-note" placeholder="How did it turn out? Any tips?" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:var(--radius);" />
+          <button class="action-btn" id="made-btn" style="margin-top:8px">Share that I made this</button>
+        </div>
+        <div id="made-list"></div>
+      </section>
+
+<style>
+.related-section, .reviews-section, .made-section { margin-top: 40px; }
+.related-section h2, .reviews-section h2, .made-section h2 { font-size: 1.4rem; margin-bottom: 16px; }
+.related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+.related-card { border-radius: var(--radius); overflow: hidden; background: var(--white); box-shadow: var(--shadow); text-decoration: none; color: inherit; }
+.related-card img { width: 100%; height: 120px; object-fit: cover; }
+.related-card-body { padding: 8px 10px; }
+.related-card-title { font-family: 'Instrument Serif', serif; font-size: 0.85rem; }
+.related-card-meta { font-size: 0.72rem; color: var(--text-light); margin-top: 4px; }
+.star-picker { display: flex; gap: 4px; margin-bottom: 10px; }
+.star { font-size: 1.8rem; color: var(--border); cursor: pointer; transition: color 0.15s; }
+.star.active, .star:hover { color: var(--gold); }
+.review-item { border-bottom: 1px solid var(--border-light); padding: 14px 0; }
+.review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.review-author { font-weight: 600; font-size: 0.88rem; }
+.review-stars { color: var(--gold); font-size: 0.85rem; }
+.review-text { font-size: 0.88rem; color: var(--text-light); line-height: 1.5; }
+.review-date { font-size: 0.72rem; color: var(--text-lighter); margin-top: 4px; }
+.made-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+.made-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+.made-info { font-size: 0.85rem; }
+.made-name { font-weight: 600; }
+.made-note { color: var(--text-light); }
+.made-form { margin-bottom: 16px; }
+</style>
+
+<script>
+// === RELATED RECIPES ===
+(async function() {
+  const grid = document.getElementById("related-grid");
+  if (!grid) return;
+  const recipeId = document.getElementById("save-btn")?.dataset.recipeId || "0";
+  try {
+    const res = await fetch("/api/related?id=" + recipeId + "&category=" + encodeURIComponent(document.querySelector("[data-category]")?.dataset.category || "comfort") + "&cuisine=" + encodeURIComponent(document.querySelector("[data-cuisine]")?.dataset.cuisine || ""));
+    const data = await res.json();
+    grid.innerHTML = data.recipes.map(function(r) {
+      return '<a href="/recipe/' + r.slug + '" class="related-card"><img src="' + (r.hero_image || "") + '" alt="' + r.title + '" loading="lazy" /><div class="related-card-body"><div class="related-card-title">' + r.title + '</div><div class="related-card-meta">' + r.total_time + ' min</div></div></a>';
+    }).join("");
+  } catch(e) {}
+})();
+
+// === REVIEWS ===
+let selectedRating = 0;
+document.querySelectorAll("#star-picker .star").forEach(function(star) {
+  star.addEventListener("click", function() {
+    selectedRating = parseInt(this.dataset.val || "0");
+    document.querySelectorAll("#star-picker .star").forEach(function(s, i) {
+      s.classList.toggle("active", i < selectedRating);
+    });
+  });
+  star.addEventListener("mouseenter", function() {
+    const v = parseInt(this.dataset.val || "0");
+    document.querySelectorAll("#star-picker .star").forEach(function(s, i) {
+      s.style.color = i < v ? "var(--gold)" : "var(--border)";
+    });
+  });
+});
+document.getElementById("star-picker")?.addEventListener("mouseleave", function() {
+  document.querySelectorAll("#star-picker .star").forEach(function(s, i) {
+    s.style.color = i < selectedRating ? "var(--gold)" : "var(--border)";
+  });
+});
+
+document.getElementById("submit-review")?.addEventListener("click", async function() {
+  if (!localStorage.getItem("db_user")) { window.location.href = "/login"; return; }
+  if (!selectedRating) { alert("Please select a rating"); return; }
+  const recipeId = document.getElementById("save-btn")?.dataset.recipeId || "0";
+  const comment = (document.getElementById("review-text") as HTMLTextAreaElement).value;
+  const btn = this as HTMLButtonElement;
+  btn.disabled = true; btn.textContent = "Submitting...";
+  try {
+    await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipe_id: parseInt(recipeId), rating: selectedRating, comment }),
+    });
+    btn.textContent = "Review submitted!";
+    loadReviews();
+  } catch(e) { btn.textContent = "Submit review"; btn.disabled = false; }
+});
+
+async function loadReviews() {
+  const list = document.getElementById("reviews-list");
+  if (!list) return;
+  const recipeId = document.getElementById("save-btn")?.dataset.recipeId || "0";
+  try {
+    const res = await fetch("/api/reviews?recipe_id=" + recipeId);
+    const data = await res.json();
+    list.innerHTML = data.reviews.map(function(r) {
+      const stars = "&#9733;".repeat(r.rating) + "&#9734;".repeat(5 - r.rating);
+      return '<div class="review-item"><div class="review-header"><span class="review-author">' + (r.display_name || "Anonymous") + '</span><span class="review-stars">' + stars + '</span></div>' + (r.comment ? '<p class="review-text">' + r.comment + '</p>' : '') + '</div>';
+    }).join("");
+  } catch(e) {}
+}
+loadReviews();
+
+// === MADE THIS ===
+document.getElementById("made-btn")?.addEventListener("click", async function() {
+  if (!localStorage.getItem("db_user")) { window.location.href = "/login"; return; }
+  const recipeId = document.getElementById("save-btn")?.dataset.recipeId || "0";
+  const note = (document.getElementById("made-note") as HTMLInputElement).value;
+  const btn = this as HTMLButtonElement;
+  btn.disabled = true; btn.textContent = "Sharing...";
+  try {
+    await fetch("/api/made-this", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipe_id: parseInt(recipeId), note }),
+    });
+    btn.textContent = "Shared!";
+    loadMadeThis();
+  } catch(e) { btn.textContent = "Share that I made this"; btn.disabled = false; }
+});
+
+async function loadMadeThis() {
+  const list = document.getElementById("made-list");
+  if (!list) return;
+  const recipeId = document.getElementById("save-btn")?.dataset.recipeId || "0";
+  try {
+    const res = await fetch("/api/made-this?recipe_id=" + recipeId);
+    const data = await res.json();
+    list.innerHTML = data.entries.map(function(m) {
+      const initial = (m.display_name || "?")[0].toUpperCase();
+      return '<div class="made-item"><div class="made-avatar">' + initial + '</div><div class="made-info"><span class="made-name">' + (m.display_name || "Anonymous") + '</span> <span class="made-note">' + (m.note || "made this!") + '</span></div></div>';
+    }).join("");
+  } catch(e) {}
+}
+loadMadeThis();
+</script>
+
+      <AdSlot id="ad-recipe-mobile-sticky" size="sticky" />
 </Base>
 
 <style>
