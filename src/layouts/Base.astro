@@ -21,5 +21,50 @@ const { title = 'DishBloom — Discover Beautiful Food', description = 'Visual f
 </head>
 <body>
   <slot />
+
+  <div id="adblock-modal" style="display:none">
+    <div class="ab-overlay"></div>
+    <div class="ab-card">
+      <span class="ab-emoji">🍳</span>
+      <h2>We notice you are using an ad blocker</h2>
+      <p>DishBloom is free because of ads. They help us keep creating beautiful recipes for you. Please consider whitelisting us — our ads are minimal and non-intrusive.</p>
+      <div class="ab-actions">
+        <button class="ab-btn ab-primary" onclick="document.getElementById('adblock-modal').style.display='none';localStorage.setItem('ab_dismissed','1')">Continue with ad blocker</button>
+        <a class="ab-btn ab-secondary" href="https://thedishbloom.com/about">Learn more</a>
+      </div>
+      <p class="ab-note">You can also support us by sharing recipes with friends</p>
+    </div>
+  </div>
+
+  <style>
+    .ab-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998; }
+    .ab-card { position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:20px;padding:40px 32px;max-width:420px;width:90%;z-index:9999;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+    .ab-emoji { font-size:3rem;display:block;margin-bottom:12px; }
+    .ab-card h2 { font-size:1.3rem;margin-bottom:10px;font-family:'Instrument Serif',serif; }
+    .ab-card p { color:#666;font-size:0.9rem;line-height:1.6;margin-bottom:16px; }
+    .ab-actions { display:flex;flex-direction:column;gap:8px; }
+    .ab-btn { padding:12px 24px;border-radius:100px;font-weight:600;font-size:0.88rem;border:none;cursor:pointer;text-decoration:none;text-align:center; }
+    .ab-primary { background:#D4A853;color:#fff; }
+    .ab-primary:hover { background:#B8903E; }
+    .ab-secondary { background:transparent;border:1px solid #ddd;color:#666; }
+    .ab-note { font-size:0.75rem;color:#999;margin-top:12px;margin-bottom:0; }
+  </style>
+
+  <script>
+    (function() {
+      if (localStorage.getItem('ab_dismissed')) return;
+      var test = document.createElement('div');
+      test.innerHTML = '&nbsp;';
+      test.className = 'adsbox ad-slot';
+      test.style.cssText = 'position:absolute;top:-999px;left:-999px;height:1px;width:1px;';
+      document.body.appendChild(test);
+      setTimeout(function() {
+        if (test.offsetHeight === 0 || test.clientHeight === 0) {
+          document.getElementById('adblock-modal').style.display = 'block';
+        }
+        document.body.removeChild(test);
+      }, 500);
+    })();
+  </script>
 </body>
 </html>
