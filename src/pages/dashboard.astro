@@ -1,0 +1,157 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const db = env.DB;
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const tokenMatch = cookieHeader.match(/db_token=([^;]+)/);
+let user: any = null;
+let savedRecipes: any[] = [];
+let myRecipes: any[] = [];
+let stats = { saved: 0, submitted: 0, streak: 0 };
+
+if (!tokenMatch) return Astro.redirect("/login");
+
+try {
+  user = JSON.parse(atob(tokenMatch[1]));
+  if (user.exp < Date.now()) return Astro.redirect("/login");
+
+  const userRow = await db.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
+  if (!userRow) return Astro.redirect("/login");
+  user = { ...user, ...userRow };
+
+  const { results: saved } = await db.prepare(
+    "SELECT r.* FROM recipes r JOIN collection_recipes cr ON r.id = cr.recipe_id JOIN collections c ON cr.collection_id = c.id WHERE c.user_id = ? ORDER BY cr.id DESC LIMIT 12"
+  ).bind(user.id).all();
+  savedRecipes = saved;
+
+  const { results: mine } = await db.prepare(
+    "SELECT * FROM recipes WHERE author_id = ? ORDER BY id DESC LIMIT 12"
+  ).bind(user.id).all();
+  myRecipes = mine;
+
+  stats.saved = savedRecipes.length;
+  stats.submitted = myRecipes.length;
+  stats.streak = userRow.streak_days || 0;
+} catch(e) {
+  return Astro.redirect("/login");
+}
+---
+<Base title="Dashboard | DishBloom">
+  <Navbar />
+
+  <section class="dash-page">
+    <div class="container">
+      <div class="dash-header">
+        <div class="dash-avatar">{user.display_name?.[0]?.toUpperCase() || "?"}</div>
+        <div class="dash-info">
+          <h1>{user.display_name}</h1>
+          <p class="dash-email">{user.email}</p>
+        </div>
+        <a href="/settings" class="dash-settings-btn">Settings</a>
+      </div>
+
+      <div class="dash-stats">
+        <div class="dash-stat"><span class="ds-num">{stats.saved}</span><span class="ds-label">Saved</span></div>
+        <div class="dash-stat"><span class="ds-num">{stats.submitted}</span><span class="ds-label">My recipes</span></div>
+        <div class="dash-stat"><span class="ds-num">{stats.streak}</span><span class="ds-label">Day streak</span></div>
+      </div>
+
+      <div class="dash-actions">
+        <a href="/submit" class="dash-action-btn">+ Submit recipe</a>
+        <a href="/saved" class="dash-action-btn dash-outline">View all saved</a>
+        <button class="dash-action-btn dash-outline" id="logout-btn">Log out</button>
+      </div>
+
+      <AdSlot id="ad-dash-top" size="leaderboard" />
+
+      {savedRecipes.length > 0 && (
+        <section class="dash-section">
+          <h2>Saved recipes</h2>
+          <div class="dash-grid">
+            {savedRecipes.map(r => {
+              const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+              return (
+                <a href={"/recipe/" + r.slug} class="dash-card">
+                  <img src={img} alt={r.title} />
+                  <div class="dash-card-body">
+                    <div class="dash-card-title">{r.title}</div>
+                    <div class="dash-card-meta">{r.total_time} min &middot; {r.calories} cal</div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {myRecipes.length > 0 && (
+        <section class="dash-section">
+          <h2>My recipes</h2>
+          <div class="dash-grid">
+            {myRecipes.map(r => {
+              const img = r.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80";
+              return (
+                <a href={"/recipe/" + r.slug} class="dash-card">
+                  <img src={img} alt={r.title} />
+                  <div class="dash-card-body">
+                    <div class="dash-card-title">{r.title}</div>
+                    <div class="dash-card-meta">{r.total_time} min &middot; {r.calories} cal</div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <AdSlot id="ad-dash-bottom" size="leaderboard" />
+    </div>
+  </section>
+</Base>
+
+<style>
+.dash-page { padding: 32px 0 60px; }
+.dash-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.dash-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--gold); color: white; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dash-info h1 { font-size: 1.6rem; margin-bottom: 2px; }
+.dash-email { color: var(--text-light); font-size: 0.88rem; }
+.dash-settings-btn { margin-left: auto; padding: 8px 20px; border-radius: 100px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 500; color: var(--text-light); }
+.dash-settings-btn:hover { border-color: var(--gold); color: var(--gold-dark); }
+.dash-stats { display: flex; gap: 24px; margin-bottom: 24px; }
+.dash-stat { text-align: center; padding: 16px 24px; background: var(--bg); border-radius: var(--radius); flex: 1; }
+.ds-num { display: block; font-size: 1.6rem; font-weight: 700; color: var(--gold-dark); }
+.ds-label { font-size: 0.78rem; color: var(--text-light); }
+.dash-actions { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; }
+.dash-action-btn { padding: 10px 22px; border-radius: 100px; font-size: 0.88rem; font-weight: 600; background: var(--gold); color: white; border: none; cursor: pointer; }
+.dash-action-btn:hover { background: var(--gold-dark); }
+.dash-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.dash-outline:hover { border-color: var(--gold); color: var(--gold-dark); }
+.dash-section { margin-bottom: 36px; }
+.dash-section h2 { font-size: 1.3rem; margin-bottom: 16px; }
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+.dash-card { border-radius: var(--radius); overflow: hidden; background: var(--white); box-shadow: var(--shadow); transition: transform 0.2s; }
+.dash-card:hover { transform: translateY(-3px); }
+.dash-card img { width: 100%; height: 140px; object-fit: cover; }
+.dash-card-body { padding: 10px 12px; }
+.dash-card-title { font-family: 'Instrument Serif', serif; font-size: 0.92rem; margin-bottom: 4px; }
+.dash-card-meta { font-size: 0.75rem; color: var(--text-light); }
+@media (max-width: 640px) {
+  .dash-header { flex-wrap: wrap; }
+  .dash-settings-btn { margin-left: 0; }
+  .dash-stats { gap: 12px; }
+  .dash-stat { padding: 12px 16px; }
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+<script>
+document.getElementById("logout-btn")?.addEventListener("click", () => {
+  document.cookie = "db_token=; Path=/; Max-Age=0";
+  localStorage.removeItem("db_user");
+  window.location.href = "/";
+});
+</script>
