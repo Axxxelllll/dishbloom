@@ -1,0 +1,143 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { env } from "cloudflare:workers";
+
+const db = env.DB;
+const q = Astro.url.searchParams.get("q") || "";
+let recipes: any[] = [];
+
+if (q.trim()) {
+  const ingredients = q.split(",").map(i => i.trim().toLowerCase()).filter(Boolean);
+  if (ingredients.length > 0) {
+    let query = "SELECT *, 0 as match_count FROM recipes WHERE hero_image IS NOT NULL AND hero_image != ''";
+    const conditions = ingredients.map(ing => "LOWER(ingredients) LIKE '%" + ing.replace(/'/g, "") + "%'");
+    query = "SELECT *, (" + conditions.join(" + ") + ") as match_count FROM recipes WHERE hero_image IS NOT NULL AND hero_image != '' AND (" + conditions.join(" OR ") + ") ORDER BY match_count DESC, avg_rating DESC LIMIT 30";
+    const { results } = await db.prepare(query).all();
+    recipes = results;
+  }
+}
+---
+<Base title="What Can I Cook? | DishBloom">
+  <Navbar />
+
+  <section class="pantry-hero">
+    <div class="container">
+      <h1>What can I cook?</h1>
+      <p class="pantry-sub">Type the ingredients you have and we will find recipes you can make right now.</p>
+
+      <div class="pantry-search">
+        <div class="pantry-input-wrap">
+          <span class="pantry-icon">🧊</span>
+          <input type="text" id="pantry-input" value={q} placeholder="e.g. chicken, garlic, rice, lemon" class="pantry-input" />
+        </div>
+        <button class="pantry-btn" id="pantry-search-btn">Find recipes</button>
+      </div>
+
+      <div class="pantry-quick">
+        <span class="pq-label">Popular:</span>
+        <button class="pq-chip" onclick="addIng('chicken')">chicken</button>
+        <button class="pq-chip" onclick="addIng('pasta')">pasta</button>
+        <button class="pq-chip" onclick="addIng('eggs')">eggs</button>
+        <button class="pq-chip" onclick="addIng('rice')">rice</button>
+        <button class="pq-chip" onclick="addIng('cheese')">cheese</button>
+        <button class="pq-chip" onclick="addIng('tofu')">tofu</button>
+        <button class="pq-chip" onclick="addIng('potato')">potato</button>
+        <button class="pq-chip" onclick="addIng('salmon')">salmon</button>
+      </div>
+    </div>
+  </section>
+
+  <AdSlot id="ad-pantry-top" size="leaderboard" />
+
+  {q && <p class="pantry-count container">{recipes.length} recipes found with your ingredients</p>}
+
+  {recipes.length > 0 && (
+    <div class="masonry">
+      {recipes.map(r => {
+        const img = r.hero_image || "";
+        const dietaryArr = (() => { try { return JSON.parse(r.dietary || "[]"); } catch { return []; } })();
+        const tag = dietaryArr[0] || r.category || "";
+        return (
+          <a href={"/recipe/" + r.slug} class="recipe-card">
+            <img src={img} alt={r.title} loading="lazy" />
+            <span class="match-badge">{r.match_count} match{r.match_count > 1 ? "es" : ""}</span>
+            <div class="card-body">
+              <div class="card-title">{r.title}</div>
+              <div class="card-meta">
+                <span>&#9733; {r.avg_rating || "4.5"}</span>
+                <span class="dot">&middot;</span>
+                <span>{r.total_time} min</span>
+                <span class="dot">&middot;</span>
+                <span>{r.calories} cal</span>
+              </div>
+              {tag && <div style="margin-top:8px"><span class="pill">{tag}</span></div>}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  )}
+
+  {q && recipes.length === 0 && (
+    <div class="empty-state">
+      <h2>No recipes found</h2>
+      <p>Try different ingredients or fewer items</p>
+    </div>
+  )}
+
+  {!q && (
+    <div class="empty-state">
+      <h2>Enter your ingredients above</h2>
+      <p>We will find the best recipes you can make with what you have</p>
+    </div>
+  )}
+
+  <AdSlot id="ad-pantry-bottom" size="leaderboard" />
+</Base>
+
+<style>
+.pantry-hero { text-align: center; padding: 48px 0 24px; }
+.pantry-hero h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 8px; }
+.pantry-sub { color: var(--text-light); font-size: 1rem; margin-bottom: 24px; }
+.pantry-search { display: flex; max-width: 600px; margin: 0 auto 16px; gap: 8px; }
+.pantry-input-wrap { flex: 1; display: flex; align-items: center; border: 2px solid var(--border); border-radius: 100px; padding: 0 16px; transition: border-color 0.2s; }
+.pantry-input-wrap:focus-within { border-color: var(--gold); }
+.pantry-icon { font-size: 1.2rem; margin-right: 8px; }
+.pantry-input { flex: 1; padding: 14px 0; border: none; outline: none; font-size: 1rem; background: transparent; }
+.pantry-btn { padding: 14px 28px; border-radius: 100px; border: none; background: var(--gold); color: white; font-weight: 600; font-size: 0.95rem; cursor: pointer; white-space: nowrap; }
+.pantry-btn:hover { background: var(--gold-dark); }
+.pantry-quick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; max-width: 600px; margin: 0 auto; }
+.pq-label { font-size: 0.82rem; color: var(--text-lighter); }
+.pq-chip { padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); background: var(--white); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+.pq-chip:hover { border-color: var(--gold); background: var(--gold-light); }
+.pantry-count { font-size: 0.9rem; color: var(--text-light); margin-bottom: 20px; }
+.match-badge { position: absolute; top: 10px; left: 10px; background: var(--gold); color: white; padding: 3px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; }
+.recipe-card { position: relative; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state h2 { font-size: 1.4rem; margin-bottom: 8px; }
+.empty-state p { color: var(--text-light); }
+</style>
+
+<script>
+function addIng(name) {
+  var input = document.getElementById("pantry-input");
+  var val = input.value.trim();
+  if (val && !val.endsWith(",")) val += ", ";
+  else if (!val) val = "";
+  input.value = val + name;
+  input.focus();
+}
+document.getElementById("pantry-search-btn")?.addEventListener("click", function() {
+  var val = document.getElementById("pantry-input").value.trim();
+  if (val) window.location = "/pantry?q=" + encodeURIComponent(val);
+});
+document.getElementById("pantry-input")?.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    var val = this.value.trim();
+    if (val) window.location = "/pantry?q=" + encodeURIComponent(val);
+  }
+});
+</script>

@@ -1,0 +1,57 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+import AdSlot from '../components/AdSlot.astro';
+
+const collections = [
+  { name: "Summer BBQ", emoji: "&#9728;", slug: "comfort", desc: "Grilled favorites for outdoor parties" },
+  { name: "Quick Weeknight", emoji: "&#9201;", slug: "quick", desc: "Ready in 20 minutes or less" },
+  { name: "Date Night In", emoji: "&#128149;", slug: "date-night", desc: "Impress your special someone" },
+  { name: "Meal Prep Sunday", emoji: "&#128230;", slug: "meal-prep", desc: "Cook once, eat all week" },
+  { name: "Comfort Classics", emoji: "&#128149;", slug: "comfort", desc: "Warm, cozy, feel-good food" },
+  { name: "Vegan Favorites", emoji: "&#127793;", slug: "vegan", desc: "Plant-based and delicious" },
+  { name: "Drinks & Mocktails", emoji: "&#127865;", slug: "drinks", desc: "Refresh and impress" },
+  { name: "Dessert Heaven", emoji: "&#127856;", slug: "dessert", desc: "Sweet treats for every mood" },
+  { name: "Budget Friendly", emoji: "&#128176;", slug: "budget", desc: "Delicious meals under a dollar" },
+  { name: "High Protein", emoji: "&#128170;", slug: "high-protein", desc: "Fuel your body right" },
+  { name: "One Pot Wonders", emoji: "&#127858;", slug: "one-pot", desc: "Minimal dishes, maximum flavor" },
+  { name: "Gluten Free", emoji: "&#127806;", slug: "gluten-free", desc: "No gluten, all flavor" },
+];
+---
+<Base title="Collections | DishBloom">
+  <Navbar />
+
+  <section class="coll-hero">
+    <div class="container">
+      <h1>Recipe collections</h1>
+      <p class="coll-sub">Curated recipe groups for every mood, season, and occasion.</p>
+    </div>
+  </section>
+
+  <AdSlot id="ad-coll-top" size="leaderboard" />
+
+  <div class="coll-grid container">
+    {collections.map(c => (
+      <a href={"/category/" + c.slug} class="coll-card">
+        <span class="coll-emoji" set:html={c.emoji}></span>
+        <h3>{c.name}</h3>
+        <p>{c.desc}</p>
+      </a>
+    ))}
+  </div>
+
+  <AdSlot id="ad-coll-bottom" size="leaderboard" />
+</Base>
+
+<style>
+.coll-hero { text-align: center; padding: 48px 0 24px; }
+.coll-hero h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.coll-sub { color: var(--text-light); font-size: 1rem; margin-top: 6px; }
+.coll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding: 32px 0 60px; }
+.coll-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; transition: all 0.2s; }
+.coll-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(212,168,83,0.12); }
+.coll-emoji { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+.coll-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.coll-card p { font-size: 0.82rem; color: var(--text-light); }
+</style>

@@ -11,6 +11,8 @@ export const GET: APIRoute = async () => {
   const now = new Date().toISOString().split("T")[0];
   
   let urls = `  <url><loc>https://thedishbloom.com</loc><changefreq>daily</changefreq><priority>1.0</priority><lastmod>${now}</lastmod></url>
+  <url><loc>https://thedishbloom.com/pantry</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://thedishbloom.com/collections</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://thedishbloom.com/search</loc><priority>0.6</priority></url>
   <url><loc>https://thedishbloom.com/blog</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://thedishbloom.com/community</loc><changefreq>daily</changefreq><priority>0.7</priority></url>

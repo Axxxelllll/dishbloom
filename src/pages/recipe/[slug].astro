@@ -37,7 +37,7 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
 
     <AdSlot id="ad-below-recipe-hero" size="leaderboard" />
 
-    <div class="recipe-content" data-category={recipe.category} data-cuisine={recipe.cuisine}>
+    <div class="recipe-content" data-steps={JSON.stringify(steps)} data-category={recipe.category} data-cuisine={recipe.cuisine}>
       <header class="recipe-header">
         <div class="recipe-breadcrumb">
           <a href="/">Home</a> <span>/</span> <span>{recipe.title}</span>
@@ -367,6 +367,215 @@ async function loadMadeThis() {
   } catch(e) {}
 }
 loadMadeThis();
+</script>
+
+      
+      <!-- COOK MODE OVERLAY -->
+      <div id="cook-mode" style="display:none">
+        <div class="cm-overlay">
+          <div class="cm-header">
+            <span class="cm-title" id="cm-recipe-title">{recipe.title}</span>
+            <button class="cm-close" onclick="exitCookMode()">&#10005;</button>
+          </div>
+          <div class="cm-body">
+            <div class="cm-step-num" id="cm-step-num">1</div>
+            <div class="cm-step-title" id="cm-step-title"></div>
+            <div class="cm-step-text" id="cm-step-text"></div>
+            <div class="cm-timer-wrap" id="cm-timer-wrap" style="display:none">
+              <span class="cm-timer" id="cm-timer">0:00</span>
+              <button class="cm-timer-btn" id="cm-timer-btn" onclick="toggleTimer()">Start timer</button>
+            </div>
+          </div>
+          <div class="cm-footer">
+            <button class="cm-nav" id="cm-prev" onclick="prevStep()">&#8592; Previous</button>
+            <span class="cm-progress" id="cm-progress">1 / 5</span>
+            <button class="cm-nav cm-nav-next" id="cm-next" onclick="nextStep()">Next &#8594;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHOPPING LIST MODAL -->
+      <div id="shopping-modal" style="display:none">
+        <div class="sl-overlay" onclick="document.getElementById('shopping-modal').style.display='none'"></div>
+        <div class="sl-card">
+          <div class="sl-header">
+            <h3>&#128722; Shopping List</h3>
+            <button onclick="document.getElementById('shopping-modal').style.display='none'" style="background:none;border:none;font-size:1.2rem;cursor:pointer">&#10005;</button>
+          </div>
+          <div id="sl-content">Loading...</div>
+          <div class="sl-actions">
+            <button class="sl-copy-btn" onclick="copyShoppingList()">Copy to clipboard</button>
+          </div>
+        </div>
+      </div>
+
+<style>
+.cm-overlay { position:fixed;inset:0;background:#1a1a1a;z-index:9999;display:flex;flex-direction:column;color:#fff; }
+.cm-header { display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #333; }
+.cm-title { font-family:'Instrument Serif',serif;font-size:1.1rem; }
+.cm-close { background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer; }
+.cm-body { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center; }
+.cm-step-num { font-size:4rem;font-weight:900;color:#D4A853;margin-bottom:12px; }
+.cm-step-title { font-family:'Instrument Serif',serif;font-size:1.6rem;margin-bottom:16px; }
+.cm-step-text { font-size:1.1rem;color:#ccc;line-height:1.7;max-width:600px; }
+.cm-timer-wrap { margin-top:24px;display:flex;align-items:center;gap:12px; }
+.cm-timer { font-size:2.4rem;font-weight:700;font-family:monospace;color:#D4A853; }
+.cm-timer-btn { padding:8px 20px;border-radius:100px;border:1px solid #D4A853;background:transparent;color:#D4A853;font-weight:600;cursor:pointer; }
+.cm-footer { display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid #333; }
+.cm-nav { background:none;border:1px solid #555;color:#fff;padding:10px 24px;border-radius:100px;font-size:0.9rem;cursor:pointer; }
+.cm-nav-next { background:#D4A853;border-color:#D4A853;font-weight:600; }
+.cm-progress { color:#888;font-size:0.85rem; }
+
+.sl-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998; }
+.sl-card { position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px;z-index:9999;max-height:70vh;overflow-y:auto; }
+.sl-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px; }
+.sl-header h3 { font-size:1.2rem; }
+.sl-category { font-weight:700;color:var(--gold-dark);font-size:0.85rem;margin-top:14px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px; }
+.sl-item { font-size:0.9rem;color:var(--text-light);padding:4px 0;display:flex;align-items:center;gap:8px; }
+.sl-item input { accent-color: var(--gold); }
+.sl-actions { margin-top:16px;text-align:center; }
+.sl-copy-btn { padding:10px 24px;border-radius:100px;background:var(--gold);color:#fff;border:none;font-weight:600;cursor:pointer; }
+
+@media print {
+  nav, .ad-slot, .action-btn, footer, .cm-overlay, #shopping-modal, #adblock-modal, #join-banner, .pill, .save-btn, button { display:none !important; }
+  .recipe-card, .masonry { display:none !important; }
+  body { font-size:12pt; color:#000; background:#fff; }
+  img { max-width:300px; }
+  h1 { font-size:18pt; }
+  h2 { font-size:14pt; margin-top:12pt; }
+}
+</style>
+
+<script>
+var cmSteps = [];
+var cmCurrent = 0;
+var cmTimerInterval = null;
+var cmTimerSeconds = 0;
+var cmTimerRunning = false;
+
+try {
+  cmSteps = JSON.parse(document.querySelector("[data-steps]")?.dataset.steps || "[]");
+} catch(e) { cmSteps = []; }
+
+function startCookMode() {
+  if (!cmSteps.length) { alert("No steps found"); return; }
+  cmCurrent = 0;
+  document.getElementById("cook-mode").style.display = "block";
+  document.body.style.overflow = "hidden";
+  if ("wakeLock" in navigator) navigator.wakeLock.request("screen").catch(function(){});
+  showStep();
+}
+
+function exitCookMode() {
+  document.getElementById("cook-mode").style.display = "none";
+  document.body.style.overflow = "";
+  if (cmTimerInterval) clearInterval(cmTimerInterval);
+  cmTimerRunning = false;
+}
+
+function showStep() {
+  var s = cmSteps[cmCurrent];
+  document.getElementById("cm-step-num").textContent = cmCurrent + 1;
+  document.getElementById("cm-step-title").textContent = s.title || "Step " + (cmCurrent + 1);
+  document.getElementById("cm-step-text").textContent = s.text || "";
+  document.getElementById("cm-progress").textContent = (cmCurrent + 1) + " / " + cmSteps.length;
+  document.getElementById("cm-prev").style.visibility = cmCurrent === 0 ? "hidden" : "visible";
+  document.getElementById("cm-next").textContent = cmCurrent === cmSteps.length - 1 ? "Finish \u2713" : "Next \u2192";
+
+  if (s.timer && s.timer > 0) {
+    cmTimerSeconds = s.timer;
+    document.getElementById("cm-timer-wrap").style.display = "flex";
+    document.getElementById("cm-timer").textContent = formatTime(cmTimerSeconds);
+    document.getElementById("cm-timer-btn").textContent = "Start timer";
+    if (cmTimerInterval) clearInterval(cmTimerInterval);
+    cmTimerRunning = false;
+  } else {
+    document.getElementById("cm-timer-wrap").style.display = "none";
+  }
+}
+
+function nextStep() {
+  if (cmCurrent < cmSteps.length - 1) { cmCurrent++; showStep(); }
+  else exitCookMode();
+}
+
+function prevStep() {
+  if (cmCurrent > 0) { cmCurrent--; showStep(); }
+}
+
+function toggleTimer() {
+  if (cmTimerRunning) {
+    clearInterval(cmTimerInterval);
+    cmTimerRunning = false;
+    document.getElementById("cm-timer-btn").textContent = "Resume";
+  } else {
+    cmTimerRunning = true;
+    document.getElementById("cm-timer-btn").textContent = "Pause";
+    cmTimerInterval = setInterval(function() {
+      cmTimerSeconds--;
+      document.getElementById("cm-timer").textContent = formatTime(cmTimerSeconds);
+      if (cmTimerSeconds <= 0) {
+        clearInterval(cmTimerInterval);
+        cmTimerRunning = false;
+        document.getElementById("cm-timer-btn").textContent = "Done!";
+        try { new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==").play(); } catch(e) {}
+      }
+    }, 1000);
+  }
+}
+
+function formatTime(s) {
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return m + ":" + (sec < 10 ? "0" : "") + sec;
+}
+
+function printRecipe() { window.print(); }
+
+async function addToShoppingList() {
+  document.getElementById("shopping-modal").style.display = "block";
+  var recipeId = document.getElementById("save-btn")?.dataset.recipeId || "0";
+  try {
+    var res = await fetch("/api/shopping-list", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipe_id: parseInt(recipeId), servings: 4 }),
+    });
+    var data = await res.json();
+    if (data.error) {
+      document.getElementById("sl-content").innerHTML = "<p>" + data.error + ". <a href='/login'>Log in</a> or just use the ingredient list above.</p>";
+      return;
+    }
+    var html = "";
+    Object.keys(data.categories).forEach(function(cat) {
+      if (data.categories[cat].length === 0) return;
+      html += "<div class='sl-category'>" + cat + "</div>";
+      data.categories[cat].forEach(function(item) {
+        html += "<div class='sl-item'><input type='checkbox' /><span>" + item + "</span></div>";
+      });
+    });
+    document.getElementById("sl-content").innerHTML = html;
+  } catch(e) {
+    document.getElementById("sl-content").innerHTML = "<p>Could not generate list</p>";
+  }
+}
+
+function copyShoppingList() {
+  var items = document.querySelectorAll("#sl-content .sl-item span");
+  var text = Array.from(items).map(function(s) { return "- " + s.textContent; }).join("\n");
+  navigator.clipboard.writeText(text).then(function() {
+    document.querySelector(".sl-copy-btn").textContent = "Copied!";
+    setTimeout(function() { document.querySelector(".sl-copy-btn").textContent = "Copy to clipboard"; }, 2000);
+  });
+}
+
+document.addEventListener("keydown", function(e) {
+  if (document.getElementById("cook-mode").style.display !== "block") return;
+  if (e.key === "ArrowRight") nextStep();
+  if (e.key === "ArrowLeft") prevStep();
+  if (e.key === "Escape") exitCookMode();
+  if (e.key === " ") { e.preventDefault(); toggleTimer(); }
+});
 </script>
 
       <AdSlot id="ad-recipe-mobile-sticky" size="sticky" />
