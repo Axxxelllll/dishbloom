@@ -12,6 +12,7 @@ const totalRecipes = countResult[0].total;
 const { results: recipes } = await db.prepare("SELECT id, title, slug, description, cuisine, difficulty, total_time, servings, calories, protein, avg_rating, review_count, total_saves, dietary, category, hero_image FROM recipes ORDER BY CASE WHEN hero_image IS NOT NULL AND hero_image != '' THEN 0 ELSE 1 END, RANDOM() LIMIT 40").all();
 ---
 <Base>
+  <CommunityBanner />
   <Navbar />
   <CategoryBar />
   
@@ -102,8 +103,6 @@ const { results: recipes } = await db.prepare("SELECT id, title, slug, descripti
       </div>
     </div>
   </section>
-
-  <CommunityBanner />
 
   <AdSlot id="ad-before-footer" size="leaderboard" />
 

@@ -5,6 +5,7 @@ import AdSlot from '../components/AdSlot.astro';
 import CommunityBanner from '../components/CommunityBanner.astro';
 ---
 <Base title="Sign up | DishBloom">
+  <CommunityBanner />
   <Navbar />
   <section class="auth-page">
     <div class="auth-card">
@@ -20,7 +21,6 @@ import CommunityBanner from '../components/CommunityBanner.astro';
       <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
     </div>
   </section>
-  <CommunityBanner />
   <AdSlot id="ad-signup" size="leaderboard" />
 </Base>
 

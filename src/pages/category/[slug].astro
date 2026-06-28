@@ -75,6 +75,7 @@ const stmt = (slug === "15-min" || slug === "5-ingredient" || slug === "quick" |
 const { results: recipes } = await stmt.all();
 ---
 <Base title={title + " Recipes | DishBloom"}>
+  <CommunityBanner />
   <Navbar />
   <CategoryBar />
 
@@ -119,8 +120,6 @@ const { results: recipes } = await stmt.all();
       <a href="/" class="back-btn">&larr; Browse all recipes</a>
     </div>
   )}
-  <CommunityBanner />
-
   <AdSlot id="ad-category-bottom" size="leaderboard" />
   <AdSlot id="ad-category-sticky" size="sticky" />
 </Base>

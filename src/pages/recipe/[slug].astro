@@ -22,6 +22,7 @@ const groups = [...new Set(ingredients.map((i: any) => i.group))];
 const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=900&q=85";
 ---
 <Base title={recipe.title + " | DishBloom"} description={recipe.description}>
+  <CommunityBanner />
   <Navbar />
   
   <article class="recipe-page">
@@ -155,8 +156,6 @@ const heroImg = recipe.hero_image || "https://images.unsplash.com/photo-15460699
           </div>
         </section>
       )}
-
-      <CommunityBanner />
 
       <AdSlot id="ad-after-recipe" size="leaderboard" />
 

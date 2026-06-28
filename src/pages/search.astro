@@ -19,6 +19,7 @@ if (q.trim()) {
 }
 ---
 <Base title={(q ? q + " — " : "") + "Search | DishBloom"}>
+  <CommunityBanner />
   <Navbar />
 
   <section class="search-hero">
@@ -64,8 +65,6 @@ if (q.trim()) {
       <p>Try searching for something else like "chicken", "pasta", or "vegan"</p>
     </div>
   )}
-  <CommunityBanner />
-
   <AdSlot id="ad-search-bottom" size="leaderboard" />
   <AdSlot id="ad-search-sticky" size="sticky" />
 </Base>
